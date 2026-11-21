@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/models/dungeon.dart';
 import '../../core/models/enemy.dart';
 import '../battle/battle_screen.dart';
+import '../battle/battle_sprites.dart';
 import '../battle/battle_state.dart';
 import '../character/character_notifier.dart';
 import '../character/inventory_notifier.dart';
@@ -316,6 +317,8 @@ class _PreBattleSheet extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            Center(child: EnemySprite(enemy: enemy, size: 110)),
+            const SizedBox(height: 16),
             Row(
               children: [
                 Text(elemIcon, style: const TextStyle(fontSize: 36)),
@@ -527,14 +530,25 @@ class _RoomTile extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        label,
-                        style: TextStyle(
-                          color: isAccessible
-                              ? Colors.white
-                              : Colors.white38,
-                          fontWeight: FontWeight.bold,
-                        ),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              label,
+                              style: TextStyle(
+                                color: isAccessible
+                                    ? Colors.white
+                                    : Colors.white54,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                          if (room.enemies.isNotEmpty && !room.isCleared)
+                            Text(
+                              elemIcon(room.enemies.first.element),
+                              style: const TextStyle(fontSize: 14),
+                            ),
+                        ],
                       ),
                       if (room.isCleared)
                         const Text('클리어 ✓',
@@ -544,7 +558,7 @@ class _RoomTile extends StatelessWidget {
                       if (isCurrent && !room.isCleared)
                         const Text('현재 위치',
                             style: TextStyle(
-                                color: Colors.white54,
+                                color: Colors.white60,
                                 fontSize: 11)),
                     ],
                   ),

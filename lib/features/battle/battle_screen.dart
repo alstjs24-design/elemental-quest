@@ -1,6 +1,6 @@
 // Callers: lib/features/dungeon/dungeon_screen.dart (battle room push)
-// Purpose: Turn-based combat UI — HP/MP bars, action buttons, battle log
-// Reads/Writes: battleProvider (BattleState; calls playerAttack/Skill/Defend/Flee/endBattle)
+// Purpose: Turn-based combat UI — arena with sprites, HP/MP bars, action buttons, battle log
+// Reads/Writes: battleProvider (BattleState; calls playerChooseRps/playerFlee/endBattle)
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/models/character.dart';
@@ -8,6 +8,7 @@ import '../../core/models/enemy.dart';
 import '../character/character_notifier.dart';
 import 'battle_engine.dart';
 import 'battle_notifier.dart';
+import 'battle_sprites.dart';
 import 'battle_state.dart';
 
 class BattleScreen extends ConsumerStatefulWidget {
@@ -37,42 +38,49 @@ class _BattleScreenState extends ConsumerState<BattleScreen> {
     final battle = ref.watch(battleProvider);
 
     if (battle == null) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      return const Scaffold(
+        backgroundColor: Color(0xFF050D14),
+        body: Center(child: CircularProgressIndicator()),
+      );
     }
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0D1B2A),
+      backgroundColor: const Color(0xFF050D14),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: Text('${battle.enemy.name} 전투',
-            style: const TextStyle(fontSize: 16)),
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(elemIcon(battle.enemy.element),
+                style: const TextStyle(fontSize: 18)),
+            const SizedBox(width: 6),
+            Text(battle.enemy.name,
+                style: const TextStyle(
+                    fontSize: 16, fontWeight: FontWeight.bold)),
+            if (battle.enemy.grade == EnemyGrade.boss) ...[
+              const SizedBox(width: 6),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: Colors.red.shade900,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: const Text('BOSS',
+                    style: TextStyle(
+                        color: Colors.red,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold)),
+              ),
+            ],
+          ],
+        ),
         centerTitle: true,
       ),
       body: Column(
         children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Column(
-              children: [
-                _CombatantBar(
-                  name: battle.enemy.name,
-                  currentHp: battle.enemy.currentHp,
-                  maxHp: battle.enemy.maxHp,
-                  color: Colors.red,
-                ),
-                const SizedBox(height: 8),
-                _CombatantBar(
-                  name: battle.player.name,
-                  currentHp: battle.player.currentHp,
-                  maxHp: battle.player.stats.maxHp,
-                  currentMp: battle.player.currentMp,
-                  maxMp: battle.player.stats.maxMp,
-                  color: Colors.blue,
-                ),
-              ],
-            ),
-          ),
+          _BattleArena(battle: battle),
           Expanded(
             child: _BattleLog(
                 log: battle.log.map((r) => r.message).toList()),
@@ -87,82 +95,197 @@ class _BattleScreenState extends ConsumerState<BattleScreen> {
   }
 }
 
-class _CombatantBar extends StatelessWidget {
-  final String name;
-  final int currentHp;
-  final int maxHp;
-  final int? currentMp;
-  final int? maxMp;
-  final Color color;
+// ── Arena ─────────────────────────────────────────────────────────────────────
 
-  const _CombatantBar({
-    required this.name,
-    required this.currentHp,
-    required this.maxHp,
-    this.currentMp,
-    this.maxMp,
-    required this.color,
-  });
+class _BattleArena extends StatelessWidget {
+  final BattleState battle;
+  const _BattleArena({required this.battle});
 
   @override
   Widget build(BuildContext context) {
-    final hpRatio = (currentHp / maxHp).clamp(0.0, 1.0);
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.05),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+    final enemyGlow = elemAccentColor(battle.enemy.element);
+    final playerGlow = elemAccentColor(battle.player.element);
+
+    return SizedBox(
+      height: 268,
+      child: Stack(
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(name,
-                  style: const TextStyle(
-                      color: Colors.white, fontWeight: FontWeight.bold)),
-              Text('$currentHp / $maxHp HP',
-                  style: TextStyle(color: color, fontSize: 12)),
-            ],
-          ),
-          const SizedBox(height: 4),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(4),
-            child: LinearProgressIndicator(
-              value: hpRatio,
-              backgroundColor: Colors.white12,
-              color: color,
-              minHeight: 8,
-            ),
-          ),
-          if (currentMp != null && maxMp != null) ...[
-            const SizedBox(height: 4),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const SizedBox(),
-                Text('$currentMp / $maxMp MP',
-                    style: const TextStyle(
-                        color: Colors.purpleAccent, fontSize: 11)),
-              ],
-            ),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(4),
-              child: LinearProgressIndicator(
-                value: (currentMp! / maxMp!).clamp(0.0, 1.0),
-                backgroundColor: Colors.white12,
-                color: Colors.purpleAccent,
-                minHeight: 6,
+          // atmospheric background
+          Positioned.fill(
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    enemyGlow.withValues(alpha: 0.08),
+                    const Color(0xFF050D14),
+                    playerGlow.withValues(alpha: 0.07),
+                  ],
+                ),
               ),
             ),
-          ],
+          ),
+          // centre divider line
+          Positioned(
+            left: 24,
+            right: 24,
+            top: 134,
+            child: Container(
+              height: 1,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(colors: [
+                  Colors.transparent,
+                  Colors.white10,
+                  Colors.white10,
+                  Colors.transparent,
+                ]),
+              ),
+            ),
+          ),
+          // Enemy — top half
+          Positioned(
+            top: 10,
+            left: 0,
+            right: 0,
+            child: Column(
+              children: [
+                EnemySprite(enemy: battle.enemy, size: 92),
+                const SizedBox(height: 8),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 28),
+                  child: _CompactBar(
+                    label: battle.enemy.name,
+                    current: battle.enemy.currentHp,
+                    max: battle.enemy.maxHp,
+                    color: enemyGlow,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // Player — bottom half
+          Positioned(
+            bottom: 6,
+            left: 0,
+            right: 0,
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 28),
+                  child: Column(
+                    children: [
+                      _CompactBar(
+                        label: battle.player.name,
+                        current: battle.player.currentHp,
+                        max: battle.player.stats.maxHp,
+                        color: playerGlow,
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Text(
+                            'MP ${battle.player.currentMp}/${battle.player.stats.maxMp}',
+                            style: const TextStyle(
+                                color: Colors.purpleAccent, fontSize: 11),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(3),
+                              child: LinearProgressIndicator(
+                                value: (battle.player.currentMp /
+                                        battle.player.stats.maxMp)
+                                    .clamp(0.0, 1.0),
+                                backgroundColor: Colors.white12,
+                                color: Colors.purpleAccent,
+                                minHeight: 5,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 8),
+                PlayerSprite(character: battle.player, size: 82),
+              ],
+            ),
+          ),
+          // "enemy turn" indicator
+          if (!battle.isPlayerTurn && !battle.isBattleOver)
+            Positioned(
+              left: 0,
+              right: 0,
+              top: 118,
+              child: Center(
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: Colors.red.withValues(alpha: 0.18),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                        color: Colors.red.withValues(alpha: 0.4)),
+                  ),
+                  child: const Text('적 행동 중',
+                      style:
+                          TextStyle(color: Colors.red, fontSize: 11)),
+                ),
+              ),
+            ),
         ],
       ),
     );
   }
 }
+
+class _CompactBar extends StatelessWidget {
+  final String label;
+  final int current;
+  final int max;
+  final Color color;
+  const _CompactBar(
+      {required this.label,
+      required this.current,
+      required this.max,
+      required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Expanded(
+              child: Text(label,
+                  style: const TextStyle(
+                      color: Colors.white70, fontSize: 11),
+                  overflow: TextOverflow.ellipsis),
+            ),
+            Text('$current / $max',
+                style: TextStyle(color: color, fontSize: 11)),
+          ],
+        ),
+        const SizedBox(height: 3),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(3),
+          child: LinearProgressIndicator(
+            value: (current / max).clamp(0.0, 1.0),
+            backgroundColor: Colors.white12,
+            color: color,
+            minHeight: 7,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ── Battle log ────────────────────────────────────────────────────────────────
 
 class _BattleLog extends StatefulWidget {
   final List<String> log;
@@ -197,18 +320,34 @@ class _BattleLogState extends State<_BattleLog> {
 
   @override
   Widget build(BuildContext context) {
-    return ListView.builder(
-      controller: _scroll,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      itemCount: widget.log.length,
-      itemBuilder: (_, i) => Padding(
-        padding: const EdgeInsets.symmetric(vertical: 2),
-        child: Text(widget.log[i],
-            style: const TextStyle(color: Colors.white70, fontSize: 13)),
+    return Container(
+      color: Colors.black26,
+      child: ListView.builder(
+        controller: _scroll,
+        padding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        itemCount: widget.log.length,
+        itemBuilder: (_, i) {
+          final isLast = i == widget.log.length - 1;
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 2),
+            child: Text(
+              widget.log[i],
+              style: TextStyle(
+                  color: isLast ? Colors.white : Colors.white60,
+                  fontSize: 13,
+                  fontWeight: isLast
+                      ? FontWeight.w500
+                      : FontWeight.normal),
+            ),
+          );
+        },
       ),
     );
   }
 }
+
+// ── Action bar ────────────────────────────────────────────────────────────────
 
 class _ActionBar extends ConsumerWidget {
   final BattleState battle;
@@ -221,7 +360,7 @@ class _ActionBar extends ConsumerWidget {
 
     return Container(
       padding: const EdgeInsets.all(16),
-      color: Colors.black26,
+      color: Colors.black38,
       child: Column(
         children: [
           Row(
@@ -230,7 +369,8 @@ class _ActionBar extends ConsumerWidget {
                 child: _ABtn(
                   label: '⚔️ 공격',
                   enabled: enabled,
-                  onTap: () => notifier.playerChooseRps(RpsChoice.attack),
+                  onTap: () =>
+                      notifier.playerChooseRps(RpsChoice.attack),
                 ),
               ),
               const SizedBox(width: 8),
@@ -239,7 +379,8 @@ class _ActionBar extends ConsumerWidget {
                   label: '🛡️ 방어',
                   enabled: enabled,
                   color: Colors.blueGrey,
-                  onTap: () => notifier.playerChooseRps(RpsChoice.defense),
+                  onTap: () =>
+                      notifier.playerChooseRps(RpsChoice.defense),
                 ),
               ),
               const SizedBox(width: 8),
@@ -248,7 +389,8 @@ class _ActionBar extends ConsumerWidget {
                   label: '💨 회피',
                   enabled: enabled,
                   color: Colors.teal,
-                  onTap: () => notifier.playerChooseRps(RpsChoice.evasion),
+                  onTap: () =>
+                      notifier.playerChooseRps(RpsChoice.evasion),
                 ),
               ),
             ],
@@ -295,6 +437,8 @@ class _ABtn extends StatelessWidget {
     );
   }
 }
+
+// ── Result panel ──────────────────────────────────────────────────────────────
 
 class _ResultPanel extends ConsumerWidget {
   final BattleState battle;
