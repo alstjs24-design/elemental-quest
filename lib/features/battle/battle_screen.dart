@@ -367,44 +367,75 @@ class _ActionBar extends ConsumerWidget {
       color: Colors.black38,
       child: Column(
         children: [
+          // charge indicator
+          if (battle.isCharged)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.amber.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.amber.withValues(alpha: 0.6)),
+                ),
+                child: const Text(
+                  '⚡ 집중 충전 완료! 다음 공격 ×2.0',
+                  style: TextStyle(color: Colors.amber, fontSize: 12, fontWeight: FontWeight.bold),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ),
           Row(
             children: [
               Expanded(
                 child: _ABtn(
-                  label: '⚔️ 공격',
+                  label: battle.isCharged ? '⚡⚔️ 강타' : '⚔️ 강타',
                   enabled: enabled,
-                  onTap: () =>
-                      notifier.playerChooseRps(RpsChoice.attack),
+                  color: battle.isCharged ? Colors.deepOrange : const Color(0xFFE07840),
+                  onTap: () => notifier.playerChooseRps(RpsChoice.attack),
                 ),
               ),
               const SizedBox(width: 8),
               Expanded(
                 child: _ABtn(
-                  label: '🛡️ 방어',
+                  label: battle.isCharged ? '⚡🛡️ 막아치기' : '🛡️ 막아치기',
                   enabled: enabled,
-                  color: Colors.blueGrey,
-                  onTap: () =>
-                      notifier.playerChooseRps(RpsChoice.defense),
+                  color: battle.isCharged ? Colors.indigo : Colors.blueGrey,
+                  onTap: () => notifier.playerChooseRps(RpsChoice.defense),
                 ),
               ),
               const SizedBox(width: 8),
               Expanded(
                 child: _ABtn(
-                  label: '💨 회피',
+                  label: battle.isCharged ? '⚡💨 꿰뚫기' : '💨 꿰뚫기',
                   enabled: enabled,
-                  color: Colors.teal,
-                  onTap: () =>
-                      notifier.playerChooseRps(RpsChoice.evasion),
+                  color: battle.isCharged ? Colors.cyan.shade700 : Colors.teal,
+                  onTap: () => notifier.playerChooseRps(RpsChoice.evasion),
                 ),
               ),
             ],
           ),
           const SizedBox(height: 8),
-          _ABtn(
-            label: '🏃 도망',
-            enabled: enabled,
-            color: Colors.orange,
-            onTap: notifier.playerFlee,
+          Row(
+            children: [
+              Expanded(
+                child: _ABtn(
+                  label: battle.isCharged ? '⚡ 충전 완료' : '⚡ 집중',
+                  enabled: enabled && !battle.isCharged,
+                  color: Colors.amber.shade700,
+                  onTap: notifier.playerCharge,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _ABtn(
+                  label: '🏃 도망',
+                  enabled: enabled,
+                  color: Colors.orange,
+                  onTap: notifier.playerFlee,
+                ),
+              ),
+            ],
           ),
         ],
       ),

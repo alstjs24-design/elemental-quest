@@ -152,6 +152,7 @@ class BattleNotifier extends StateNotifier<BattleState?> {
       enemy: s.enemy,
       effectiveAttack: s.effectiveAttack,
       effectiveDefense: s.effectiveDefense,
+      isCharged: s.isCharged,
     );
 
     final entries = <BattleResult>[
@@ -173,11 +174,11 @@ class BattleNotifier extends StateNotifier<BattleState?> {
 
     if (!s.enemy.isAlive) {
       final drops = generateEnemyDrops(s.enemy);
-      state = s.copyWith(log: newLog, phase: BattlePhase.victory, pendingDrops: drops);
+      state = s.copyWith(log: newLog, phase: BattlePhase.victory, pendingDrops: drops, isCharged: false);
       return;
     }
     if (!s.player.isAlive) {
-      state = s.copyWith(log: newLog, phase: BattlePhase.defeat);
+      state = s.copyWith(log: newLog, phase: BattlePhase.defeat, isCharged: false);
       return;
     }
 
@@ -185,7 +186,26 @@ class BattleNotifier extends StateNotifier<BattleState?> {
       log: newLog,
       phase: BattlePhase.playerTurn,
       turn: s.turn + 1,
+      isCharged: false,
     );
+  }
+
+  void playerCharge() {
+    final s = state;
+    if (s == null || !s.isPlayerTurn || s.isCharged) return;
+
+    final entry = BattleResult(
+      actorName: s.player.name,
+      targetName: s.player.name,
+      message: '⚡ ${s.player.name}이(가) 집중! 다음 공격 ×2.0!',
+    );
+
+    state = s.copyWith(
+      log: [...s.log, entry],
+      isCharged: true,
+      phase: BattlePhase.enemyTurn,
+    );
+    _executeEnemyTurn(state!);
   }
 
   RpsChoice _weightedEnemyChoice(BattleTendency tendency) {

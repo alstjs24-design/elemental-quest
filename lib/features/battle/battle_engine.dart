@@ -255,9 +255,11 @@ class BattleEngine {
     required Enemy enemy,
     int? effectiveAttack,
     int? effectiveDefense,
+    bool isCharged = false,
   }) {
     final pAtk = effectiveAttack ?? player.stats.attack;
     final pDef = effectiveDefense ?? player.stats.defense;
+    final chargeMult = isCharged ? 2.0 : 1.0;
     final outcome = _rpsOutcome(playerChoice, enemyChoice);
     final elemMult = player.element.damageMultiplier(enemy.element);
     int playerDmg = 0;
@@ -266,9 +268,9 @@ class BattleEngine {
     String? comboMsg;
 
     if (outcome == 1) {
-      // Player wins — check win combos
-      final raw = (pAtk - enemy.defense * 0.5).clamp(1, double.infinity);
-      double bonusMult = 1.0;
+      // A안: 꿰뚫기 win → 방어 무시 (pierce); 강타 win → ×1.3 보너스
+      final effEnemyDef = playerChoice == RpsChoice.evasion ? 0 : enemy.defense;
+      double bonusMult = playerChoice == RpsChoice.attack ? 1.3 : 1.0;
 
       if (player.element == ElementType.fire && playerChoice == RpsChoice.attack) {
         bonusMult = 1.5;
@@ -278,40 +280,71 @@ class BattleEngine {
         comboMsg = '💨 질풍 반격! 속성 콤보 발동!';
       }
 
-      playerDmg = (raw * elemMult * bonusMult).round();
+      if (playerChoice == RpsChoice.defense) {
+        // 막아치기 win → 카운터 (공격력의 60%)
+        final counter = (pAtk * 0.6).round().clamp(1, 9999);
+        playerDmg = (counter * chargeMult).round();
+        comboMsg = comboMsg ?? '🗡️ 막아치기 카운터!';
+      } else {
+        final raw = (pAtk - effEnemyDef * 0.5).clamp(1, double.infinity);
+        playerDmg = (raw * elemMult * bonusMult * chargeMult).round();
+      }
       _applyDamage(enemy, playerDmg);
-      msg = '${_choiceName(playerChoice)} ▶ ${_choiceName(enemyChoice)} 승! ${enemy.name} $playerDmg 피해!';
 
-      // 💧 냉기 흡수: defense win → heal
+      final actionNote = switch (playerChoice) {
+        RpsChoice.attack  => ' (강타 보너스!)',
+        RpsChoice.evasion => ' (방어 무시!)',
+        RpsChoice.defense => ' (카운터!)',
+      };
+      msg = '${_choiceName(playerChoice)} ▶ ${_choiceName(enemyChoice)} 승! '
+          '${enemy.name} $playerDmg 피해!$actionNote';
+      if (isCharged) msg = '⚡ 집중 발동! $msg';
+
+      // 💧 냉기 흡수: water+defense win → heal + 카운터
       if (player.element == ElementType.water && playerChoice == RpsChoice.defense) {
         final maxHp = player.stats.maxHp;
         final heal = (maxHp * 0.10).round().clamp(1, maxHp);
         player.currentHp = (player.currentHp + heal).clamp(0, maxHp);
-        comboMsg = '💧 냉기 흡수! HP +$heal 회복! 속성 콤보 발동!';
+        comboMsg = '💧 냉기 흡수 + 카운터! HP +$heal 회복! 속성 콤보 발동!';
       }
     } else if (outcome == -1) {
-      // Player loses — check loss combos
-      final raw = (enemy.attack - pDef * 0.5).clamp(1, double.infinity);
-      double damageReduction = 1.0;
+      // A안: 행동별 패배 2차 효과
+      // 강타 패배: 과공격 패널티 ×1.2 / 막아치기 패배: ×0.6 / 꿰뚫기 패배: 완전 빗나감
+      double damageMult = switch (playerChoice) {
+        RpsChoice.attack  => 1.2,
+        RpsChoice.defense => 0.6,
+        RpsChoice.evasion => 0.0,
+      };
 
+      // 대지 갑옷 combo: defense loss → 추가 감소
       if (player.element == ElementType.earth && playerChoice == RpsChoice.defense) {
-        damageReduction = 0.4;
+        damageMult = 0.4;
         comboMsg = '🌿 대지 갑옷! 받는 피해 60% 감소! 속성 콤보 발동!';
       }
 
-      enemyDmg = (raw * damageReduction).round().clamp(1, 9999);
-      _applyDamage(player, enemyDmg);
-      msg = '${_choiceName(enemyChoice)} ▶ ${_choiceName(playerChoice)} 패! ${player.name} $enemyDmg 피해!';
+      if (damageMult > 0) {
+        final raw = (enemy.attack - pDef * 0.5).clamp(1, double.infinity);
+        enemyDmg = (raw * damageMult).round().clamp(1, 9999);
+        _applyDamage(player, enemyDmg);
+      }
+
+      final lossNote = switch (playerChoice) {
+        RpsChoice.attack  => ' ⚠️ 과공격 패널티',
+        RpsChoice.defense => ' (부분 방어됨)',
+        RpsChoice.evasion => ' (완전 빗나감, 무피해)',
+      };
+      msg = '${_choiceName(enemyChoice)} ▶ ${_choiceName(playerChoice)} 패!'
+          '${enemyDmg > 0 ? ' ${player.name} $enemyDmg 피해!' : ''}$lossNote';
     } else if (playerChoice == RpsChoice.attack) {
       final pRaw = (pAtk - enemy.defense * 0.5).clamp(1, double.infinity);
-      playerDmg = (pRaw * elemMult).round();
+      playerDmg = (pRaw * elemMult * chargeMult).round();
       final eRaw = (enemy.attack - pDef * 0.5).clamp(1, double.infinity);
       enemyDmg = eRaw.round();
       _applyDamage(enemy, playerDmg);
       _applyDamage(player, enemyDmg);
-      msg = '공격 vs 공격! 상호 피해 — 나 $playerDmg / 적 $enemyDmg';
+      msg = '강타 vs 강타! 상호 피해 — 나 $playerDmg / 적 $enemyDmg';
     } else {
-      msg = '${_choiceName(playerChoice)} vs ${_choiceName(enemyChoice)} — 무승부. 아무 일도 없었다.';
+      msg = '${_choiceName(playerChoice)} vs ${_choiceName(enemyChoice)} — 무승부.';
     }
 
     return RpsResult(
@@ -335,8 +368,8 @@ class BattleEngine {
   }
 
   static String _choiceName(RpsChoice c) => switch (c) {
-    RpsChoice.attack  => '⚔️ 공격',
-    RpsChoice.defense => '🛡️ 방어',
-    RpsChoice.evasion => '💨 회피',
+    RpsChoice.attack  => '⚔️ 강타',
+    RpsChoice.defense => '🛡️ 막아치기',
+    RpsChoice.evasion => '💨 꿰뚫기',
   };
 }

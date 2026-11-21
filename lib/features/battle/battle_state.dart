@@ -16,6 +16,8 @@ class BattleState {
   final int effectiveDefense;
   final List<MaterialItem> pendingDrops;
 
+  final bool isCharged;
+
   const BattleState({
     required this.player,
     required this.enemy,
@@ -25,6 +27,7 @@ class BattleState {
     required this.effectiveDefense,
     this.pendingDrops = const [],
     this.isDefending = false,
+    this.isCharged = false,
     this.turn = 1,
   });
 
@@ -34,6 +37,7 @@ class BattleState {
     BattlePhase? phase,
     List<BattleResult>? log,
     bool? isDefending,
+    bool? isCharged,
     int? turn,
     int? effectiveAttack,
     int? effectiveDefense,
@@ -45,6 +49,7 @@ class BattleState {
       phase: phase ?? this.phase,
       log: log ?? this.log,
       isDefending: isDefending ?? this.isDefending,
+      isCharged: isCharged ?? this.isCharged,
       turn: turn ?? this.turn,
       effectiveAttack: effectiveAttack ?? this.effectiveAttack,
       effectiveDefense: effectiveDefense ?? this.effectiveDefense,
