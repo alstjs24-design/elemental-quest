@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/models/character.dart';
 import '../../core/models/equipment.dart';
+import '../crafting/crafting_screen.dart';
 import 'character_notifier.dart';
 import 'inventory_notifier.dart';
 
@@ -50,6 +51,17 @@ class _CharacterScreenState extends ConsumerState<CharacterScreen> {
             style: const TextStyle(
                 fontSize: 18, fontWeight: FontWeight.bold)),
         centerTitle: true,
+        actions: [
+          TextButton.icon(
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const CraftingScreen()),
+            ),
+            icon: const Text('⚗️', style: TextStyle(fontSize: 16)),
+            label: const Text('합성',
+                style: TextStyle(color: Colors.white70, fontSize: 13)),
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),

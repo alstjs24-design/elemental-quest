@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/models/character.dart';
 import '../../core/models/enemy.dart';
 import '../character/character_notifier.dart';
+import '../crafting/material_notifier.dart';
 import 'battle_engine.dart';
 import 'battle_notifier.dart';
 import 'battle_sprites.dart';
@@ -471,6 +472,18 @@ class _ResultPanel extends ConsumerWidget {
               '경험치 +${battle.expReward}  골드 +${battle.goldReward}',
               style: const TextStyle(color: Colors.white70),
             ),
+            if (battle.pendingDrops.isNotEmpty) ...[
+              const SizedBox(height: 6),
+              Wrap(
+                alignment: WrapAlignment.center,
+                spacing: 6,
+                children: battle.pendingDrops
+                    .map((m) => Text('${m.icon} ${m.name}',
+                        style: const TextStyle(
+                            color: Colors.amber, fontSize: 12)))
+                    .toList(),
+              ),
+            ],
           ],
           const SizedBox(height: 16),
           ElevatedButton(
@@ -479,6 +492,11 @@ class _ResultPanel extends ConsumerWidget {
                 await ref
                     .read(characterProvider.notifier)
                     .gainExp(battle.expReward);
+                if (battle.pendingDrops.isNotEmpty) {
+                  await ref
+                      .read(materialProvider.notifier)
+                      .addDrops(battle.pendingDrops);
+                }
               }
               ref.read(battleProvider.notifier).endBattle();
               if (context.mounted) {

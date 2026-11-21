@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/models/character.dart';
 import '../../core/models/enemy.dart';
 import '../../core/models/skill.dart';
+import '../../features/crafting/material_notifier.dart';
 import 'battle_engine.dart';
 import 'battle_state.dart';
 
@@ -101,7 +102,8 @@ class BattleNotifier extends StateNotifier<BattleState?> {
     final newLog = [...s.log, result];
 
     if (!s.enemy.isAlive) {
-      state = s.copyWith(log: newLog, phase: BattlePhase.victory);
+      final drops = generateEnemyDrops(s.enemy);
+      state = s.copyWith(log: newLog, phase: BattlePhase.victory, pendingDrops: drops);
       return;
     }
 
@@ -170,7 +172,8 @@ class BattleNotifier extends StateNotifier<BattleState?> {
     final newLog = [...s.log, ...entries];
 
     if (!s.enemy.isAlive) {
-      state = s.copyWith(log: newLog, phase: BattlePhase.victory);
+      final drops = generateEnemyDrops(s.enemy);
+      state = s.copyWith(log: newLog, phase: BattlePhase.victory, pendingDrops: drops);
       return;
     }
     if (!s.player.isAlive) {

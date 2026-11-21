@@ -1,5 +1,6 @@
 import '../../core/models/character.dart';
 import '../../core/models/enemy.dart';
+import '../../core/models/material_item.dart';
 import 'battle_engine.dart';
 
 enum BattlePhase { playerTurn, enemyTurn, victory, defeat, fled }
@@ -13,6 +14,7 @@ class BattleState {
   final int turn;
   final int effectiveAttack;
   final int effectiveDefense;
+  final List<MaterialItem> pendingDrops;
 
   const BattleState({
     required this.player,
@@ -21,6 +23,7 @@ class BattleState {
     required this.log,
     required this.effectiveAttack,
     required this.effectiveDefense,
+    this.pendingDrops = const [],
     this.isDefending = false,
     this.turn = 1,
   });
@@ -34,6 +37,7 @@ class BattleState {
     int? turn,
     int? effectiveAttack,
     int? effectiveDefense,
+    List<MaterialItem>? pendingDrops,
   }) {
     return BattleState(
       player: player ?? this.player,
@@ -44,6 +48,7 @@ class BattleState {
       turn: turn ?? this.turn,
       effectiveAttack: effectiveAttack ?? this.effectiveAttack,
       effectiveDefense: effectiveDefense ?? this.effectiveDefense,
+      pendingDrops: pendingDrops ?? this.pendingDrops,
     );
   }
 
