@@ -26,8 +26,11 @@ class _DungeonScreenState extends ConsumerState<DungeonScreen> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(
-        () => ref.read(dungeonProvider.notifier).enterFloor(1));
+    Future.microtask(() async {
+      // restore HP/MP to full at the start of each dungeon run
+      await ref.read(characterProvider.notifier).fullRestore();
+      ref.read(dungeonProvider.notifier).enterFloor(1);
+    });
   }
 
   @override
@@ -217,10 +220,11 @@ class _DungeonScreenState extends ConsumerState<DungeonScreen> {
         ),
         actions: [
           TextButton(
-            onPressed: () {
-              Navigator.pop(context);
+            onPressed: () async {
+              await ref.read(characterProvider.notifier).fullRestore();
+              if (context.mounted) Navigator.pop(context);
               ref.read(dungeonProvider.notifier).exitDungeon();
-              Navigator.pop(context);
+              if (context.mounted) Navigator.pop(context);
             },
             child: const Text('로비로 돌아가기',
                 style: TextStyle(color: Color(0xFFCE93D8))),

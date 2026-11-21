@@ -11,12 +11,16 @@ class BattleState {
   final List<BattleResult> log;
   final bool isDefending;
   final int turn;
+  final int effectiveAttack;
+  final int effectiveDefense;
 
   const BattleState({
     required this.player,
     required this.enemy,
     required this.phase,
     required this.log,
+    required this.effectiveAttack,
+    required this.effectiveDefense,
     this.isDefending = false,
     this.turn = 1,
   });
@@ -28,6 +32,8 @@ class BattleState {
     List<BattleResult>? log,
     bool? isDefending,
     int? turn,
+    int? effectiveAttack,
+    int? effectiveDefense,
   }) {
     return BattleState(
       player: player ?? this.player,
@@ -36,6 +42,8 @@ class BattleState {
       log: log ?? this.log,
       isDefending: isDefending ?? this.isDefending,
       turn: turn ?? this.turn,
+      effectiveAttack: effectiveAttack ?? this.effectiveAttack,
+      effectiveDefense: effectiveDefense ?? this.effectiveDefense,
     );
   }
 

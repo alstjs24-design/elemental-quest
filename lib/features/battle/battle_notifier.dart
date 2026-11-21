@@ -10,13 +10,20 @@ import 'battle_state.dart';
 class BattleNotifier extends StateNotifier<BattleState?> {
   BattleNotifier() : super(null);
 
-  void startBattle({required Character player, required Enemy enemy}) {
+  void startBattle({
+    required Character player,
+    required Enemy enemy,
+    int? effectiveAttack,
+    int? effectiveDefense,
+  }) {
     state = BattleState(
       player: player,
       enemy: enemy,
       phase: BattlePhase.playerTurn,
       log: [],
       turn: 1,
+      effectiveAttack: effectiveAttack ?? player.stats.attack,
+      effectiveDefense: effectiveDefense ?? player.stats.defense,
     );
   }
 
@@ -107,6 +114,7 @@ class BattleNotifier extends StateNotifier<BattleState?> {
     final result = BattleEngine.executeEnemyAction(
       enemy: s.enemy,
       player: s.player,
+      effectiveDefense: s.effectiveDefense,
     );
 
     final actualDamage = (result.damage * defenseReduction).round();
@@ -140,6 +148,8 @@ class BattleNotifier extends StateNotifier<BattleState?> {
       enemyChoice: enemyChoice,
       player: s.player,
       enemy: s.enemy,
+      effectiveAttack: s.effectiveAttack,
+      effectiveDefense: s.effectiveDefense,
     );
 
     final entries = <BattleResult>[

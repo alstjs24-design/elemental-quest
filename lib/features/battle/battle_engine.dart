@@ -101,7 +101,9 @@ class BattleEngine {
   static BattleResult executeEnemyAction({
     required Enemy enemy,
     required Character player,
+    int? effectiveDefense,
   }) {
+    final playerDef = effectiveDefense ?? player.stats.defense;
     if (enemy.skills.isNotEmpty && _shouldUseSkill(enemy)) {
       final skill = enemy.skills[0];
       return _useSkillOnCharacter(
@@ -109,6 +111,7 @@ class BattleEngine {
         actorAttack: enemy.attack,
         actorElement: enemy.element,
         target: player,
+        targetDefense: playerDef,
         skill: skill,
       );
     }
@@ -117,7 +120,7 @@ class BattleEngine {
       actorAttack: enemy.attack,
       actorElement: enemy.element,
       targetName: player.name,
-      targetDefense: player.stats.defense,
+      targetDefense: playerDef,
       targetElement: player.element,
       target: player,
     );
@@ -210,9 +213,11 @@ class BattleEngine {
     required ElementType actorElement,
     required Character target,
     required Skill skill,
+    int? targetDefense,
   }) {
     final multiplier = actorElement.damageMultiplier(target.element);
-    final raw = (skill.basePower + actorAttack * 0.5) - target.stats.defense * 0.3;
+    final effectiveDef = targetDefense ?? target.stats.defense;
+    final raw = (skill.basePower + actorAttack * 0.5) - effectiveDef * 0.3;
     final damage = (raw.clamp(1, double.infinity) * multiplier).round();
 
     _applyDamage(target, damage);
@@ -248,7 +253,11 @@ class BattleEngine {
     required RpsChoice enemyChoice,
     required Character player,
     required Enemy enemy,
+    int? effectiveAttack,
+    int? effectiveDefense,
   }) {
+    final pAtk = effectiveAttack ?? player.stats.attack;
+    final pDef = effectiveDefense ?? player.stats.defense;
     final outcome = _rpsOutcome(playerChoice, enemyChoice);
     final elemMult = player.element.damageMultiplier(enemy.element);
     int playerDmg = 0;
@@ -258,15 +267,13 @@ class BattleEngine {
 
     if (outcome == 1) {
       // Player wins — check win combos
-      final raw = (player.stats.attack - enemy.defense * 0.5).clamp(1, double.infinity);
+      final raw = (pAtk - enemy.defense * 0.5).clamp(1, double.infinity);
       double bonusMult = 1.0;
 
       if (player.element == ElementType.fire && playerChoice == RpsChoice.attack) {
-        // 🔥 화염 폭발: damage ×1.5
         bonusMult = 1.5;
         comboMsg = '🔥 화염 폭발! 속성 콤보 발동!';
       } else if (player.element == ElementType.wind && playerChoice == RpsChoice.evasion) {
-        // 💨 질풍 반격: win + extra 50% counter
         bonusMult = 1.5;
         comboMsg = '💨 질풍 반격! 속성 콤보 발동!';
       }
@@ -277,17 +284,17 @@ class BattleEngine {
 
       // 💧 냉기 흡수: defense win → heal
       if (player.element == ElementType.water && playerChoice == RpsChoice.defense) {
-        final heal = (player.stats.maxHp * 0.10).round().clamp(1, player.stats.maxHp);
-        player.currentHp = (player.currentHp + heal).clamp(0, player.stats.maxHp);
+        final maxHp = player.stats.maxHp;
+        final heal = (maxHp * 0.10).round().clamp(1, maxHp);
+        player.currentHp = (player.currentHp + heal).clamp(0, maxHp);
         comboMsg = '💧 냉기 흡수! HP +$heal 회복! 속성 콤보 발동!';
       }
     } else if (outcome == -1) {
       // Player loses — check loss combos
-      final raw = (enemy.attack - player.stats.defense * 0.5).clamp(1, double.infinity);
+      final raw = (enemy.attack - pDef * 0.5).clamp(1, double.infinity);
       double damageReduction = 1.0;
 
       if (player.element == ElementType.earth && playerChoice == RpsChoice.defense) {
-        // 🌿 대지 갑옷: defense loss → 60% damage reduction
         damageReduction = 0.4;
         comboMsg = '🌿 대지 갑옷! 받는 피해 60% 감소! 속성 콤보 발동!';
       }
@@ -296,9 +303,9 @@ class BattleEngine {
       _applyDamage(player, enemyDmg);
       msg = '${_choiceName(enemyChoice)} ▶ ${_choiceName(playerChoice)} 패! ${player.name} $enemyDmg 피해!';
     } else if (playerChoice == RpsChoice.attack) {
-      final pRaw = (player.stats.attack - enemy.defense * 0.5).clamp(1, double.infinity);
+      final pRaw = (pAtk - enemy.defense * 0.5).clamp(1, double.infinity);
       playerDmg = (pRaw * elemMult).round();
-      final eRaw = (enemy.attack - player.stats.defense * 0.5).clamp(1, double.infinity);
+      final eRaw = (enemy.attack - pDef * 0.5).clamp(1, double.infinity);
       enemyDmg = eRaw.round();
       _applyDamage(enemy, playerDmg);
       _applyDamage(player, enemyDmg);

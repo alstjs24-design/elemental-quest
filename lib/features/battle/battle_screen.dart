@@ -25,12 +25,15 @@ class _BattleScreenState extends ConsumerState<BattleScreen> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(
-      () => ref.read(battleProvider.notifier).startBattle(
+    Future.microtask(() {
+      final effective = ref.read(effectiveStatsProvider);
+      ref.read(battleProvider.notifier).startBattle(
             player: widget.player,
             enemy: widget.enemy,
-          ),
-    );
+            effectiveAttack: effective.attack,
+            effectiveDefense: effective.defense,
+          );
+    });
   }
 
   @override
