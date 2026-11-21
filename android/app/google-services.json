@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "335007006109",
+    "project_id": "elemental-quest-d2bc3",
+    "storage_bucket": "elemental-quest-d2bc3.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:335007006109:android:f2e424fdeb6ea9840a4374",
+        "android_client_info": {
+          "package_name": "com.elementalquest.elemental_quest"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCDdPh3X7Ttl6ZKY-BbmexbwkOT8zHtarY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
