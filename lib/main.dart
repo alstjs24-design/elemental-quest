@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'features/character/character_save.dart';
+import 'features/legacy/legacy_save.dart';
 import 'features/home/home_screen.dart';
 import 'firebase_options.dart';
 
@@ -11,6 +12,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Hive.initFlutter();
   await CharacterSave.init();
+  await LegacySave.init();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   FlutterError.onError = (details) {

@@ -10,6 +10,7 @@ import '../battle/battle_screen.dart';
 import '../battle/battle_state.dart';
 import '../character/character_notifier.dart';
 import '../character/inventory_notifier.dart';
+import '../legacy/legacy_notifier.dart';
 import 'dungeon_notifier.dart';
 import 'treasure_loot.dart';
 
@@ -110,9 +111,25 @@ class _DungeonScreenState extends ConsumerState<DungeonScreen> {
 
       if (result == BattlePhase.victory && mounted) {
         ref.read(dungeonProvider.notifier).markCurrentRoomCleared();
+        final ds = ref.read(dungeonProvider);
+        final roomsCleared = ds.dungeon?.rooms.where((r) => r.isCleared).length ?? 1;
+        final floor = ds.dungeon?.floor ?? 1;
+        final earned = await ref.read(legacyProvider.notifier)
+            .onRunEnd(floor: floor, roomsCleared: roomsCleared, victory: false);
+        if (context.mounted) _showFragmentToast(context, earned);
         if (room.type == RoomType.boss && context.mounted) {
-          _showFloorComplete(context);
+          final bossEarned = await ref.read(legacyProvider.notifier)
+              .onRunEnd(floor: floor, roomsCleared: roomsCleared, victory: true);
+          if (context.mounted) _showFragmentToast(context, bossEarned, bonus: true);
+          if (context.mounted) _showFloorComplete(context);
         }
+      } else if (result == BattlePhase.defeat && mounted) {
+        final ds = ref.read(dungeonProvider);
+        final roomsCleared = (ds.dungeon?.rooms.where((r) => r.isCleared).length ?? 0).clamp(1, 999);
+        final floor = ds.dungeon?.floor ?? 1;
+        final earned = await ref.read(legacyProvider.notifier)
+            .onRunEnd(floor: floor, roomsCleared: roomsCleared, victory: false);
+        if (context.mounted) _showDeathDialog(context, earned);
       }
       return;
     }
@@ -130,7 +147,7 @@ class _DungeonScreenState extends ConsumerState<DungeonScreen> {
 
     if (room.type == RoomType.rest && !room.isCleared) {
       final charNotifier = ref.read(characterProvider.notifier);
-      final maxHp = ref.read(characterProvider).effectiveStats.maxHp;
+      final maxHp = ref.read(effectiveStatsProvider).maxHp;
       await charNotifier.restoreHp((maxHp * 0.3).round());
       ref.read(dungeonProvider.notifier).markCurrentRoomCleared();
       if (mounted && context.mounted) {
@@ -143,6 +160,73 @@ class _DungeonScreenState extends ConsumerState<DungeonScreen> {
         );
       }
     }
+  }
+
+  void _showFragmentToast(BuildContext context, int earned, {bool bonus = false}) {
+    final msg = bonus
+        ? '👑 보스 클리어! 영혼 파편 +$earned 획득!'
+        : '💎 영혼 파편 +$earned 획득!';
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(msg),
+        duration: const Duration(seconds: 2),
+        backgroundColor: const Color(0xFF6B2FC9),
+      ),
+    );
+  }
+
+  void _showDeathDialog(BuildContext context, int earned) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => AlertDialog(
+        backgroundColor: const Color(0xFF1A0A2E),
+        title: const Text('💀 쓰러졌습니다',
+            style: TextStyle(color: Colors.red, fontSize: 20)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('던전에서 쓰러졌지만\n영혼의 흔적이 남았습니다.',
+                style: TextStyle(color: Colors.white70), textAlign: TextAlign.center),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              decoration: BoxDecoration(
+                color: const Color(0xFF6B2FC9).withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFF6B2FC9).withValues(alpha: 0.5)),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text('💎', style: TextStyle(fontSize: 24)),
+                  const SizedBox(width: 8),
+                  Text('영혼 파편 +$earned',
+                      style: const TextStyle(
+                          color: Color(0xFFCE93D8),
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold)),
+                ],
+              ),
+            ),
+            const SizedBox(height: 8),
+            const Text('유산 화면에서 영구 강화에 사용하세요.',
+                style: TextStyle(color: Colors.white38, fontSize: 11)),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              ref.read(dungeonProvider.notifier).exitDungeon();
+              Navigator.pop(context);
+            },
+            child: const Text('로비로 돌아가기',
+                style: TextStyle(color: Color(0xFFCE93D8))),
+          ),
+        ],
+      ),
+    );
   }
 
   void _showLootDialog(BuildContext context, String itemName) {

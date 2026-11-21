@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/enums/element_type.dart';
 import '../../core/models/character.dart';
 import '../../core/models/equipment.dart';
+import '../legacy/legacy_notifier.dart';
 import 'character_save.dart';
 
 class CharacterState {
@@ -146,3 +147,21 @@ class CharacterNotifier extends StateNotifier<CharacterState> {
 final characterProvider = StateNotifierProvider<CharacterNotifier, CharacterState>(
   (ref) => CharacterNotifier(),
 );
+
+/// Equipment + Legacy bonuses combined — use this for all stat display / battle init.
+final effectiveStatsProvider = Provider<CharacterStats>((ref) {
+  final charState = ref.watch(characterProvider);
+  final legacy = ref.watch(legacyProvider);
+  final base = charState.activeCharacter?.stats;
+  if (base == null) {
+    return const CharacterStats(maxHp: 0, maxMp: 0, attack: 0, defense: 0, speed: 0);
+  }
+  final equipped = charState.equipped;
+  return CharacterStats(
+    maxHp:    base.maxHp    + equipped.values.fold<int>(0, (s, e) => s + e.hpBonus)      + legacy.hpBonus,
+    maxMp:    base.maxMp    + legacy.mpBonus,
+    attack:   base.attack   + equipped.values.fold<int>(0, (s, e) => s + e.attackBonus)  + legacy.attackBonus,
+    defense:  base.defense  + equipped.values.fold<int>(0, (s, e) => s + e.defenseBonus) + legacy.defenseBonus,
+    speed:    base.speed    + equipped.values.fold<int>(0, (s, e) => s + e.speedBonus),
+  );
+});

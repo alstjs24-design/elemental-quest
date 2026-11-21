@@ -6,6 +6,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../character/character_notifier.dart';
 import '../character/character_screen.dart';
 import '../dungeon/dungeon_screen.dart';
+import '../legacy/legacy_notifier.dart';
+import '../legacy/legacy_screen.dart';
 import '../pvp/pvp_screen.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
@@ -19,13 +21,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(() => ref.read(characterProvider.notifier).load());
+    Future.microtask(() async {
+      await ref.read(characterProvider.notifier).load();
+      await ref.read(legacyProvider.notifier).load();
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     final charState = ref.watch(characterProvider);
     final character = charState.activeCharacter;
+    final legacy = ref.watch(legacyProvider);
 
     return Scaffold(
       body: Container(
@@ -54,6 +60,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 Text(
                   '${character.name}  Lv.${character.level}',
                   style: const TextStyle(color: Colors.white60, fontSize: 14),
+                ),
+              if (legacy.soulFragments > 0)
+                Text(
+                  '💎 ${legacy.soulFragments} 영혼 파편',
+                  style: const TextStyle(color: Color(0xFFCE93D8), fontSize: 12),
                 ),
               const Spacer(),
               _MenuButton(
@@ -86,6 +97,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 onTap: () => Navigator.push(
                   context,
                   MaterialPageRoute(builder: (_) => const CharacterScreen()),
+                ),
+              ),
+              const SizedBox(height: 16),
+              _MenuButton(
+                icon: '⚗️',
+                label: '유산',
+                subtitle: '영혼 파편으로 영구 강화',
+                color: const Color(0xFF9C27B0),
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const LegacyScreen()),
                 ),
               ),
               const Spacer(),
