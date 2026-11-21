@@ -142,14 +142,22 @@ class BattleNotifier extends StateNotifier<BattleState?> {
       enemy: s.enemy,
     );
 
-    final logEntry = BattleResult(
-      actorName: s.player.name,
-      targetName: s.enemy.name,
-      damage: result.playerDamageDealt,
-      message: result.message,
-    );
+    final entries = <BattleResult>[
+      BattleResult(
+        actorName: s.player.name,
+        targetName: s.enemy.name,
+        damage: result.playerDamageDealt,
+        message: result.message,
+      ),
+      if (result.comboMessage != null)
+        BattleResult(
+          actorName: s.player.name,
+          targetName: s.enemy.name,
+          message: result.comboMessage!,
+        ),
+    ];
 
-    final newLog = [...s.log, logEntry];
+    final newLog = [...s.log, ...entries];
 
     if (!s.enemy.isAlive) {
       state = s.copyWith(log: newLog, phase: BattlePhase.victory);

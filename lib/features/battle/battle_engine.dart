@@ -25,6 +25,7 @@ class RpsResult {
   final int playerDamageDealt;
   final int enemyDamageDealt;
   final String message;
+  final String? comboMessage;
 
   const RpsResult({
     required this.playerChoice,
@@ -32,6 +33,7 @@ class RpsResult {
     required this.playerDamageDealt,
     required this.enemyDamageDealt,
     required this.message,
+    this.comboMessage,
   });
 }
 
@@ -252,15 +254,45 @@ class BattleEngine {
     int playerDmg = 0;
     int enemyDmg = 0;
     String msg;
+    String? comboMsg;
 
     if (outcome == 1) {
+      // Player wins — check win combos
       final raw = (player.stats.attack - enemy.defense * 0.5).clamp(1, double.infinity);
-      playerDmg = (raw * elemMult).round();
+      double bonusMult = 1.0;
+
+      if (player.element == ElementType.fire && playerChoice == RpsChoice.attack) {
+        // 🔥 화염 폭발: damage ×1.5
+        bonusMult = 1.5;
+        comboMsg = '🔥 화염 폭발! 속성 콤보 발동!';
+      } else if (player.element == ElementType.wind && playerChoice == RpsChoice.evasion) {
+        // 💨 질풍 반격: win + extra 50% counter
+        bonusMult = 1.5;
+        comboMsg = '💨 질풍 반격! 속성 콤보 발동!';
+      }
+
+      playerDmg = (raw * elemMult * bonusMult).round();
       _applyDamage(enemy, playerDmg);
       msg = '${_choiceName(playerChoice)} ▶ ${_choiceName(enemyChoice)} 승! ${enemy.name} $playerDmg 피해!';
+
+      // 💧 냉기 흡수: defense win → heal
+      if (player.element == ElementType.water && playerChoice == RpsChoice.defense) {
+        final heal = (player.stats.maxHp * 0.10).round().clamp(1, player.stats.maxHp);
+        player.currentHp = (player.currentHp + heal).clamp(0, player.stats.maxHp);
+        comboMsg = '💧 냉기 흡수! HP +$heal 회복! 속성 콤보 발동!';
+      }
     } else if (outcome == -1) {
+      // Player loses — check loss combos
       final raw = (enemy.attack - player.stats.defense * 0.5).clamp(1, double.infinity);
-      enemyDmg = raw.round();
+      double damageReduction = 1.0;
+
+      if (player.element == ElementType.earth && playerChoice == RpsChoice.defense) {
+        // 🌿 대지 갑옷: defense loss → 60% damage reduction
+        damageReduction = 0.4;
+        comboMsg = '🌿 대지 갑옷! 받는 피해 60% 감소! 속성 콤보 발동!';
+      }
+
+      enemyDmg = (raw * damageReduction).round().clamp(1, 9999);
       _applyDamage(player, enemyDmg);
       msg = '${_choiceName(enemyChoice)} ▶ ${_choiceName(playerChoice)} 패! ${player.name} $enemyDmg 피해!';
     } else if (playerChoice == RpsChoice.attack) {
@@ -281,6 +313,7 @@ class BattleEngine {
       playerDamageDealt: playerDmg,
       enemyDamageDealt: enemyDmg,
       message: msg,
+      comboMessage: comboMsg,
     );
   }
 
