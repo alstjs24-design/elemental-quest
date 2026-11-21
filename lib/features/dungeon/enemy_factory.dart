@@ -32,6 +32,7 @@ class EnemyFactory {
       skills: [],
       expReward: (20 * scale).round(),
       goldReward: 10 * scale,
+      tendency: _tendencyFor(element),
     );
   }
 
@@ -64,7 +65,23 @@ class EnemyFactory {
       skills: [bossSkill],
       expReward: (100 * scale).round(),
       goldReward: 50 * scale,
+      tendency: BattleTendency.unpredictable,
     );
+  }
+
+  static BattleTendency _tendencyFor(ElementType element) {
+    switch (element) {
+      case ElementType.fire:
+        return BattleTendency.aggressive;
+      case ElementType.water:
+        return BattleTendency.evasive;
+      case ElementType.earth:
+        return BattleTendency.defensive;
+      case ElementType.wind:
+        return BattleTendency.evasive;
+      case ElementType.none:
+        return BattleTendency.unpredictable;
+    }
   }
 
   static List<String> _namesFor(ElementType element) {

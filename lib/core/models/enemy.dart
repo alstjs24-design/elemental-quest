@@ -3,6 +3,8 @@ import 'skill.dart';
 
 enum EnemyGrade { normal, elite, boss }
 
+enum BattleTendency { aggressive, defensive, evasive, unpredictable }
+
 class Enemy {
   final String id;
   final String name;
@@ -15,6 +17,7 @@ class Enemy {
   final List<Skill> skills;
   final int expReward;
   final double goldReward;
+  final BattleTendency tendency;
 
   int currentHp;
 
@@ -30,6 +33,7 @@ class Enemy {
     required this.skills,
     required this.expReward,
     required this.goldReward,
+    this.tendency = BattleTendency.unpredictable,
   }) : currentHp = maxHp;
 
   bool get isAlive => currentHp > 0;

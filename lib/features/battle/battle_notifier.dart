@@ -134,7 +134,7 @@ class BattleNotifier extends StateNotifier<BattleState?> {
     final s = state;
     if (s == null || !s.isPlayerTurn) return;
 
-    final enemyChoice = RpsChoice.values[Random().nextInt(RpsChoice.values.length)];
+    final enemyChoice = _weightedEnemyChoice(s.enemy.tendency);
     final result = BattleEngine.resolveRps(
       playerChoice: choice,
       enemyChoice: enemyChoice,
@@ -165,6 +165,29 @@ class BattleNotifier extends StateNotifier<BattleState?> {
       phase: BattlePhase.playerTurn,
       turn: s.turn + 1,
     );
+  }
+
+  RpsChoice _weightedEnemyChoice(BattleTendency tendency) {
+    final rand = Random().nextDouble();
+    switch (tendency) {
+      case BattleTendency.aggressive:
+        // 60% attack, 20% defense, 20% evasion
+        if (rand < 0.60) return RpsChoice.attack;
+        if (rand < 0.80) return RpsChoice.defense;
+        return RpsChoice.evasion;
+      case BattleTendency.defensive:
+        // 20% attack, 60% defense, 20% evasion
+        if (rand < 0.20) return RpsChoice.attack;
+        if (rand < 0.80) return RpsChoice.defense;
+        return RpsChoice.evasion;
+      case BattleTendency.evasive:
+        // 20% attack, 20% defense, 60% evasion
+        if (rand < 0.20) return RpsChoice.attack;
+        if (rand < 0.40) return RpsChoice.defense;
+        return RpsChoice.evasion;
+      case BattleTendency.unpredictable:
+        return RpsChoice.values[Random().nextInt(RpsChoice.values.length)];
+    }
   }
 
   void endBattle() {

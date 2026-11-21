@@ -254,6 +254,8 @@ class _PreBattleSheet extends StatelessWidget {
               ],
             ),
             const Divider(color: Colors.white12, height: 24),
+            _TendencyRow(tendency: enemy.tendency),
+            const SizedBox(height: 8),
             _StatRow2('HP', '${enemy.maxHp}', Colors.red),
             _StatRow2('공격', '${enemy.attack}', const Color(0xFFE07840)),
             _StatRow2('방어', '${enemy.defense}', Colors.blue),
@@ -321,6 +323,47 @@ class _StatRow2 extends StatelessWidget {
                   color: color,
                   fontSize: 13,
                   fontWeight: FontWeight.bold)),
+        ],
+      ),
+    );
+  }
+}
+
+class _TendencyRow extends StatelessWidget {
+  final BattleTendency tendency;
+  const _TendencyRow({required this.tendency});
+
+  @override
+  Widget build(BuildContext context) {
+    final (icon, label, desc, color) = switch (tendency) {
+      BattleTendency.aggressive  => ('⚔️', '공격형', '주로 공격을 선호합니다', const Color(0xFFE07840)),
+      BattleTendency.defensive   => ('🛡️', '방어형', '주로 방어를 선호합니다', Colors.blue),
+      BattleTendency.evasive     => ('💨', '회피형', '주로 회피를 선호합니다', Colors.teal),
+      BattleTendency.unpredictable => ('❓', '불규칙', '행동 패턴을 읽기 어렵습니다', Colors.purple),
+    };
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withValues(alpha: 0.4)),
+      ),
+      child: Row(
+        children: [
+          Text(icon, style: const TextStyle(fontSize: 18)),
+          const SizedBox(width: 8),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('패턴 힌트: $label',
+                  style: TextStyle(
+                      color: color,
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold)),
+              Text(desc,
+                  style: const TextStyle(color: Colors.white54, fontSize: 11)),
+            ],
+          ),
         ],
       ),
     );
