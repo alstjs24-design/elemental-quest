@@ -211,7 +211,7 @@ class _DungeonScreenState extends ConsumerState<DungeonScreen> {
             ),
             const SizedBox(height: 8),
             const Text('유산 화면에서 영구 강화에 사용하세요.',
-                style: TextStyle(color: Colors.white38, fontSize: 11)),
+                style: TextStyle(color: Colors.white60, fontSize: 11)),
           ],
         ),
         actions: [
@@ -331,7 +331,7 @@ class _PreBattleSheet extends StatelessWidget {
                               fontWeight: FontWeight.bold)),
                       Text('속성: ${enemy.element.name.toUpperCase()}',
                           style: const TextStyle(
-                              color: Colors.white54, fontSize: 12)),
+                              color: Colors.white70, fontSize: 12)),
                     ],
                   ),
                 ),
@@ -347,7 +347,7 @@ class _PreBattleSheet extends StatelessWidget {
             if (enemy.skills.isNotEmpty) ...[
               const SizedBox(height: 8),
               const Text('스킬',
-                  style: TextStyle(color: Colors.white54, fontSize: 12)),
+                  style: TextStyle(color: Colors.white70, fontSize: 12)),
               ...enemy.skills.map((s) => Padding(
                     padding: const EdgeInsets.only(left: 8, top: 2),
                     child: Text('• ${s.name}',
@@ -401,7 +401,7 @@ class _StatRow2 extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(label,
-              style: const TextStyle(color: Colors.white54, fontSize: 13)),
+              style: const TextStyle(color: Colors.white70, fontSize: 13)),
           Text(value,
               style: TextStyle(
                   color: color,
@@ -445,7 +445,7 @@ class _TendencyRow extends StatelessWidget {
                       fontSize: 13,
                       fontWeight: FontWeight.bold)),
               Text(desc,
-                  style: const TextStyle(color: Colors.white54, fontSize: 11)),
+                  style: const TextStyle(color: Colors.white70, fontSize: 11)),
             ],
           ),
         ],

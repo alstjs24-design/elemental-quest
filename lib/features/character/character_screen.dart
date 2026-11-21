@@ -116,13 +116,13 @@ class _StatCard extends StatelessWidget {
               const SizedBox(width: 8),
               Text(character.element.name.toUpperCase(),
                   style: const TextStyle(
-                      color: Colors.white54, fontSize: 13)),
+                      color: Colors.white70, fontSize: 13)),
             ],
           ),
           const SizedBox(height: 4),
           Text('EXP: ${character.exp}',
               style: const TextStyle(
-                  color: Colors.white54, fontSize: 12)),
+                  color: Colors.white70, fontSize: 12)),
           const Divider(color: Colors.white12, height: 20),
           _StatRow('HP',
               '${character.currentHp} / ${stats.maxHp}', Colors.red),
@@ -154,7 +154,7 @@ class _StatRow extends StatelessWidget {
         children: [
           Text(label,
               style: const TextStyle(
-                  color: Colors.white54, fontSize: 13)),
+                  color: Colors.white70, fontSize: 13)),
           Text(value,
               style: TextStyle(
                   color: color,
@@ -215,13 +215,13 @@ class _EquipmentSlotTile extends StatelessWidget {
                 children: [
                   Text(slotLabel,
                       style: const TextStyle(
-                          color: Colors.white54, fontSize: 12)),
+                          color: Colors.white70, fontSize: 12)),
                   Text(
                     equipped?.name ?? '없음',
                     style: TextStyle(
                       color: equipped != null
                           ? Colors.white
-                          : Colors.white38,
+                          : Colors.white60,
                       fontSize: 15,
                       fontWeight: equipped != null
                           ? FontWeight.bold

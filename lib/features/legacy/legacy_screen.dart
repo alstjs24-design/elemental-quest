@@ -88,14 +88,14 @@ class _FragmentBar extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('영혼 파편', style: TextStyle(color: Colors.white54, fontSize: 12)),
+              const Text('영혼 파편', style: TextStyle(color: Colors.white70, fontSize: 12)),
               Text('$fragments', style: const TextStyle(
                   color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
             ],
           ),
           const Spacer(),
           const Text('던전에서 획득\n죽어도 보존됨',
-              style: TextStyle(color: Colors.white38, fontSize: 11),
+              style: TextStyle(color: Colors.white60, fontSize: 11),
               textAlign: TextAlign.right),
         ],
       ),
@@ -143,7 +143,7 @@ class _UpgradeCard extends StatelessWidget {
                     style: const TextStyle(
                         color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
                 Text(upgrade.effectPerLevel,
-                    style: const TextStyle(color: Colors.white54, fontSize: 12)),
+                    style: const TextStyle(color: Colors.white70, fontSize: 12)),
                 const SizedBox(height: 6),
                 _LevelDots(current: currentLevel, max: upgrade.maxLevel),
               ],

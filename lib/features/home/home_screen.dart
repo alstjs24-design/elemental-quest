@@ -169,7 +169,7 @@ class _MenuButton extends StatelessWidget {
                               fontWeight: FontWeight.bold)),
                       Text(subtitle,
                           style: const TextStyle(
-                              color: Colors.white54, fontSize: 12)),
+                              color: Colors.white70, fontSize: 12)),
                     ],
                   ),
                 ),
