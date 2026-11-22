@@ -1,12 +1,11 @@
 // Callers: lib/main.dart (home route)
-// Purpose: Main menu — navigate to Dungeon, PvP, Character screens
+// Purpose: Main menu — navigate to PvP, Character screens
 // Reads: characterProvider (activeCharacter.name, level)
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_theme.dart';
 import '../character/character_notifier.dart';
 import '../character/character_screen.dart';
-import '../dungeon/dungeon_screen.dart';
 import '../legacy/legacy_notifier.dart';
 import '../legacy/legacy_screen.dart';
 import '../pvp/pvp_screen.dart';
@@ -90,20 +89,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
               const SizedBox(height: 16),
               _MenuButton(
-                icon: '🗺️',
-                label: '던전 탐험',
-                subtitle: '로그라이크 던전 도전',
-                color: const Color(0xFF8B2FC9),
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const DungeonScreen()),
-                ),
-              ),
-              const SizedBox(height: 16),
-              _MenuButton(
-                icon: '⚔️',
-                label: '비동기 PvP',
-                subtitle: '다른 유저의 팀과 대결',
+                icon: '🌙',
+                label: '다른 꿈과의 만남',
+                subtitle: '잠든 아이들의 꿈이 충돌할 때',
                 color: const Color(0xFFE07840),
                 onTap: () => Navigator.push(
                   context,

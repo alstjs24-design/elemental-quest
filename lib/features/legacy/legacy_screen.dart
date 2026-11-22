@@ -94,7 +94,7 @@ class _FragmentBar extends StatelessWidget {
             ],
           ),
           const Spacer(),
-          Text('던전에서 획득\n죽어도 보존됨',
+          Text('런에서 얻음\n꿈이 사라져도 남아',
               style: AppTextStyles.caption,
               textAlign: TextAlign.right),
         ],

@@ -187,14 +187,14 @@ _SpriteTheme _enemyTheme(ElementType element, EnemyGrade grade) {
 
 _SpriteTheme _playerTheme(CharacterTrait trait) {
   switch (trait) {
-    case CharacterTrait.screamer:
-      return _SpriteTheme('😤', [const Color(0xFF2A0A00), const Color(0xFF5C1500)], const Color(0xFFE07840));
-    case CharacterTrait.accepter:
-      return _SpriteTheme('🤗', [const Color(0xFF021020), const Color(0xFF082040)], const Color(0xFF42A5F5));
-    case CharacterTrait.gazer:
-      return _SpriteTheme('👀', [const Color(0xFF001015), const Color(0xFF002028)], const Color(0xFF00BCD4));
-    case CharacterTrait.shrinker:
-      return _SpriteTheme('🫣', [const Color(0xFF081008), const Color(0xFF102010)], const Color(0xFF4CAF50));
+    case CharacterTrait.screamer: // 집착 — 불안한 열정, 붉은 보랏빛
+      return _SpriteTheme('😤', [const Color(0xFF2A0A2E), const Color(0xFF6B1040)], const Color(0xFFE07840));
+    case CharacterTrait.accepter: // 체념 — 고요한 수용, 차가운 파랑
+      return _SpriteTheme('🤗', [const Color(0xFF031628), const Color(0xFF0A2E50)], const Color(0xFF4A90D9));
+    case CharacterTrait.gazer: // 직면 — 꿰뚫는 눈, 보랏빛 신비
+      return _SpriteTheme('👁️', [const Color(0xFF10062A), const Color(0xFF2A0E5E)], const Color(0xFFCE93D8));
+    case CharacterTrait.shrinker: // 도피 — 작아지는 존재, 어둔 청록
+      return _SpriteTheme('🫣', [const Color(0xFF061520), const Color(0xFF0A2838)], const Color(0xFF4DB6AC));
   }
 }
 

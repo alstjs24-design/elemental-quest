@@ -243,7 +243,7 @@ class _BattleArena extends StatelessWidget {
                     border: Border.all(
                         color: Colors.red.withValues(alpha: 0.4)),
                   ),
-                  child: Text('적 행동 중',
+                  child: Text('꿈이 흔들린다...',
                       style: AppTextStyles.caption.copyWith(
                           color: AppColors.hpLow)),
                 ),

@@ -49,11 +49,14 @@ class _RunScreenState extends ConsumerState<RunScreen> {
       );
     }
 
+    final legacyState = ref.watch(legacyProvider);
+
     if (runState.isComplete) {
       return _RunEndScreen(
         won: true,
         battlesWon: runState.totalBattlesWon,
         cardsCount: runState.pickedCards.length,
+        soulFragments: legacyState.soulFragments,
         onExit: () => Navigator.pop(context),
       );
     }
@@ -63,6 +66,7 @@ class _RunScreenState extends ConsumerState<RunScreen> {
         won: false,
         battlesWon: runState.totalBattlesWon,
         cardsCount: runState.pickedCards.length,
+        soulFragments: legacyState.soulFragments,
         onExit: () => Navigator.pop(context),
       );
     }
@@ -142,7 +146,7 @@ class _RunScreenState extends ConsumerState<RunScreen> {
                       borderRadius: BorderRadius.circular(14)),
                 ),
                 child: Text(
-                  runState.isBossPhase ? '👹 보스 도전!' : '⚔️ 전투 시작',
+                  runState.isBossPhase ? '😱 분리불안과 마주하기' : '🌙 꿈속으로',
                   style: AppTextStyles.titleMedium,
                 ),
               ),
@@ -268,9 +272,9 @@ class _ProgressBar extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text('전투 $done / ${total - 1}', style: AppTextStyles.bodySmall),
+            Text('기억 $done / ${total - 1}', style: AppTextStyles.bodySmall),
             if (isBossNext)
-              Text('🔥 보스',
+              Text('💀 분리불안',
                   style: AppTextStyles.bodySmall.copyWith(
                       color: AppColors.hpLow, fontWeight: FontWeight.bold)),
           ],
@@ -464,11 +468,13 @@ class _RunEndScreen extends StatelessWidget {
   final bool won;
   final int battlesWon;
   final int cardsCount;
+  final int soulFragments;
   final VoidCallback onExit;
   const _RunEndScreen(
       {required this.won,
       required this.battlesWon,
       required this.cardsCount,
+      required this.soulFragments,
       required this.onExit});
 
   @override
@@ -501,9 +507,37 @@ class _RunEndScreen extends StatelessWidget {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 32),
-              _StatRow('전투 클리어', '$battlesWon'),
+              _StatRow('기억 클리어', '$battlesWon'),
               _StatRow('기억한 추억', '$cardsCount'),
-              const SizedBox(height: 32),
+              const SizedBox(height: 20),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                decoration: BoxDecoration(
+                  color: AppColors.dungeon.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppColors.soul.withValues(alpha: 0.4)),
+                ),
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Text('💎', style: TextStyle(fontSize: 20)),
+                        const SizedBox(width: 8),
+                        Text('영혼 파편 $soulFragments개 보유',
+                            style: AppTextStyles.labelBold.copyWith(
+                                color: AppColors.soul)),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Text('다음 꿈에서도 이어집니다 — 유산 화면에서 영구 강화에 사용하세요',
+                        style: AppTextStyles.caption.copyWith(
+                            color: AppColors.textMuted),
+                        textAlign: TextAlign.center),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
               ElevatedButton(
                 onPressed: onExit,
                 style: ElevatedButton.styleFrom(
@@ -511,7 +545,7 @@ class _RunEndScreen extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(
                       horizontal: 40, vertical: 14),
                 ),
-                child: Text('로비로 돌아가기', style: AppTextStyles.labelBold),
+                child: Text('꿈에서 깨어나기', style: AppTextStyles.labelBold),
               ),
             ],
           ),
