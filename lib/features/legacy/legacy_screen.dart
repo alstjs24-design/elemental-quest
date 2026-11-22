@@ -150,8 +150,8 @@ class _UpgradeCard extends StatelessWidget {
           ),
           const SizedBox(width: 12),
           maxed
-              ? const Column(children: [
-                  Text('✅', style: TextStyle(fontSize: 20)),
+              ? Column(children: [
+                  const Text('✅', style: TextStyle(fontSize: 20)),
                   Text('MAX', style: AppTextStyles.caption.copyWith(color: Colors.amber)),
                 ])
               : ElevatedButton(
