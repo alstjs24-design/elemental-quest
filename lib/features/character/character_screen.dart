@@ -4,6 +4,7 @@
 // Writes: equipItem, unequipSlot on characterProvider.notifier
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/theme/app_theme.dart';
 import '../../core/enums/character_trait.dart';
 import '../../core/models/character.dart';
 import '../../core/models/equipment.dart';
@@ -36,7 +37,7 @@ class _CharacterScreenState extends ConsumerState<CharacterScreen> {
 
     if (character == null) {
       return const Scaffold(
-        backgroundColor: Color(0xFF0D1B2A),
+        backgroundColor: AppColors.bgDark,
         body: Center(child: CircularProgressIndicator()),
       );
     }
@@ -44,13 +45,11 @@ class _CharacterScreenState extends ConsumerState<CharacterScreen> {
     final stats = charState.effectiveStats;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0D1B2A),
+      backgroundColor: AppColors.bgDark,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: Text(character.name,
-            style: const TextStyle(
-                fontSize: 18, fontWeight: FontWeight.bold)),
+        title: Text(character.name, style: AppTextStyles.titleMedium),
         centerTitle: true,
         actions: [
           TextButton.icon(
@@ -59,8 +58,7 @@ class _CharacterScreenState extends ConsumerState<CharacterScreen> {
               MaterialPageRoute(builder: (_) => const CraftingScreen()),
             ),
             icon: const Text('⚗️', style: TextStyle(fontSize: 16)),
-            label: const Text('합성',
-                style: TextStyle(color: Colors.white70, fontSize: 13)),
+            label: Text('합성', style: AppTextStyles.bodySmall),
           ),
         ],
       ),
@@ -71,11 +69,7 @@ class _CharacterScreenState extends ConsumerState<CharacterScreen> {
           children: [
             _StatCard(character: character, stats: stats),
             const SizedBox(height: 16),
-            const Text('장비 슬롯',
-                style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold)),
+            Text('장비 슬롯', style: AppTextStyles.titleMedium),
             const SizedBox(height: 8),
             for (final slot in EquipmentSlot.values)
               _EquipmentSlotTile(
@@ -114,7 +108,7 @@ class _StatCard extends StatelessWidget {
         color: Colors.white.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-            color: const Color(0xFFE07840).withValues(alpha: 0.4)),
+            color: AppColors.fire.withValues(alpha: 0.4)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -122,27 +116,19 @@ class _StatCard extends StatelessWidget {
           Row(
             children: [
               Text('Lv.${character.level}',
-                  style: const TextStyle(
-                      color: Color(0xFFE07840),
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold)),
+                  style: AppTextStyles.titleLarge.copyWith(
+                      color: AppColors.fire)),
               const SizedBox(width: 8),
-              Text(character.trait.displayName,
-                  style: const TextStyle(
-                      color: Colors.white70, fontSize: 12)),
+              Text(character.trait.displayName, style: AppTextStyles.bodySmall),
             ],
           ),
           const SizedBox(height: 4),
-          Text('EXP: ${character.exp}',
-              style: const TextStyle(
-                  color: Colors.white70, fontSize: 12)),
+          Text('EXP: ${character.exp}', style: AppTextStyles.bodySmall),
           const Divider(color: Colors.white12, height: 20),
-          _StatRow('HP',
-              '${character.currentHp} / ${stats.maxHp}', Colors.red),
-          _StatRow(
-              '공격', '${stats.attack}', const Color(0xFFE07840)),
-          _StatRow('방어', '${stats.defense}', Colors.blue),
-          _StatRow('속도', '${stats.speed}', Colors.green),
+          _StatRow('HP', '${character.currentHp} / ${stats.maxHp}', AppColors.hpLow),
+          _StatRow('공격', '${stats.attack}', AppColors.fire),
+          _StatRow('방어', '${stats.defense}', AppColors.water),
+          _StatRow('속도', '${stats.speed}', AppColors.wind),
         ],
       ),
     );
@@ -162,14 +148,10 @@ class _StatRow extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label,
-              style: const TextStyle(
-                  color: Colors.white70, fontSize: 13)),
+          Text(label, style: AppTextStyles.bodySmall),
           Text(value,
-              style: TextStyle(
-                  color: color,
-                  fontSize: 13,
-                  fontWeight: FontWeight.bold)),
+              style: AppTextStyles.bodySmall.copyWith(
+                  color: color, fontWeight: FontWeight.bold)),
         ],
       ),
     );
@@ -223,9 +205,7 @@ class _EquipmentSlotTile extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(slotLabel,
-                      style: const TextStyle(
-                          color: Colors.white70, fontSize: 12)),
+                  Text(slotLabel, style: AppTextStyles.caption),
                   Text(
                     equipped?.name ?? '없음',
                     style: TextStyle(
@@ -241,8 +221,8 @@ class _EquipmentSlotTile extends StatelessWidget {
                   if (equipped != null)
                     Text(
                       _bonusText(equipped!),
-                      style: const TextStyle(
-                          color: Colors.greenAccent, fontSize: 11),
+                      style: AppTextStyles.caption.copyWith(
+                          color: AppColors.hpHigh),
                     ),
                 ],
               ),
@@ -271,24 +251,19 @@ class _EquipmentSlotTile extends StatelessWidget {
       BuildContext context, List<Equipment> items) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: const Color(0xFF1A0A2E),
+      backgroundColor: AppColors.bgPurple,
       builder: (_) => ListView(
         shrinkWrap: true,
         padding: const EdgeInsets.all(16),
         children: [
-          const Text('장비 선택',
-              style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold)),
+          Text('장비 선택', style: AppTextStyles.titleMedium),
           const SizedBox(height: 8),
           for (final eq in items)
             ListTile(
-              title: Text(eq.name,
-                  style: const TextStyle(color: Colors.white)),
+              title: Text(eq.name, style: AppTextStyles.bodyMedium),
               subtitle: Text(_bonusText(eq),
-                  style: const TextStyle(
-                      color: Colors.greenAccent, fontSize: 12)),
+                  style: AppTextStyles.caption.copyWith(
+                      color: AppColors.hpHigh)),
               onTap: () {
                 onEquip(eq);
                 Navigator.pop(context);

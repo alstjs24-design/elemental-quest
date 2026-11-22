@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/theme/app_theme.dart';
 import '../../core/models/legacy.dart';
 import 'legacy_notifier.dart';
 
@@ -11,11 +12,11 @@ class LegacyScreen extends ConsumerWidget {
     final legacy = ref.watch(legacyProvider);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0D1B2A),
+      backgroundColor: AppColors.bgDark,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: const Text('⚗️ 유산 — 영구 강화', style: TextStyle(fontSize: 16)),
+        title: Text('⚗️ 유산 — 영구 강화', style: AppTextStyles.titleMedium),
         centerTitle: true,
       ),
       body: Column(
@@ -49,7 +50,7 @@ class LegacyScreen extends ConsumerWidget {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
                                 content: Text('${upgrade.icon} ${upgrade.label} Lv.${level + 1} 강화!'),
-                                backgroundColor: Colors.deepPurple,
+                                backgroundColor: AppColors.dungeon,
                                 duration: const Duration(seconds: 2),
                               ),
                             );
@@ -88,14 +89,13 @@ class _FragmentBar extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('영혼 파편', style: TextStyle(color: Colors.white70, fontSize: 12)),
-              Text('$fragments', style: const TextStyle(
-                  color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
+              Text('영혼 파편', style: AppTextStyles.caption),
+              Text('$fragments', style: AppTextStyles.titleLarge),
             ],
           ),
           const Spacer(),
-          const Text('던전에서 획득\n죽어도 보존됨',
-              style: TextStyle(color: Colors.white60, fontSize: 11),
+          Text('던전에서 획득\n죽어도 보존됨',
+              style: AppTextStyles.caption,
               textAlign: TextAlign.right),
         ],
       ),
@@ -122,7 +122,7 @@ class _UpgradeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = maxed ? Colors.amber : canAfford ? Colors.deepPurple : Colors.grey;
+    final color = maxed ? Colors.amber : canAfford ? AppColors.dungeon : Colors.grey;
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -140,10 +140,9 @@ class _UpgradeCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(upgrade.label,
-                    style: const TextStyle(
-                        color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
+                    style: AppTextStyles.labelBold),
                 Text(upgrade.effectPerLevel,
-                    style: const TextStyle(color: Colors.white70, fontSize: 12)),
+                    style: AppTextStyles.bodySmall),
                 const SizedBox(height: 6),
                 _LevelDots(current: currentLevel, max: upgrade.maxLevel),
               ],
@@ -153,13 +152,13 @@ class _UpgradeCard extends StatelessWidget {
           maxed
               ? const Column(children: [
                   Text('✅', style: TextStyle(fontSize: 20)),
-                  Text('MAX', style: TextStyle(color: Colors.amber, fontSize: 11)),
+                  Text('MAX', style: AppTextStyles.caption.copyWith(color: Colors.amber)),
                 ])
               : ElevatedButton(
                   onPressed: onUpgrade,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: canAfford
-                        ? Colors.deepPurple
+                        ? AppColors.dungeon
                         : Colors.grey.shade800,
                     padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                     shape: RoundedRectangleBorder(
@@ -168,7 +167,7 @@ class _UpgradeCard extends StatelessWidget {
                   child: Column(
                     children: [
                       const Text('💎', style: TextStyle(fontSize: 14)),
-                      Text('$cost', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                      Text('$cost', style: AppTextStyles.caption.copyWith(fontWeight: FontWeight.bold)),
                     ],
                   ),
                 ),
@@ -194,9 +193,9 @@ class _LevelDots extends StatelessWidget {
           height: 14,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: filled ? Colors.deepPurple : Colors.transparent,
+            color: filled ? AppColors.legacy : Colors.transparent,
             border: Border.all(
-              color: filled ? Colors.deepPurple : Colors.white24,
+              color: filled ? AppColors.soul : Colors.white24,
               width: 1.5,
             ),
           ),

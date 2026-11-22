@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/theme/app_theme.dart';
 import '../../core/models/memory_card.dart';
 
 class MemoryCardScreen extends StatefulWidget {
@@ -16,7 +17,7 @@ class _MemoryCardScreenState extends State<MemoryCardScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF050D14),
+      backgroundColor: AppColors.bgDeep,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(24),
@@ -24,19 +25,16 @@ class _MemoryCardScreenState extends State<MemoryCardScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const SizedBox(height: 8),
-              const Text(
+              Text(
                 '오늘의 기억',
                 textAlign: TextAlign.center,
-                style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.amber),
+                style: AppTextStyles.titleLarge.copyWith(color: Colors.amber),
               ),
               const SizedBox(height: 4),
-              const Text(
+              Text(
                 '이 순간을 간직할 추억을 하나 골라줘',
                 textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.white54, fontSize: 13),
+                style: AppTextStyles.bodySmall,
               ),
               const SizedBox(height: 28),
               Expanded(
@@ -73,23 +71,17 @@ class _MemoryCardScreenState extends State<MemoryCardScreen> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(card.name,
-                                        style: TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.bold,
-                                          color: selected
-                                              ? Colors.amber
-                                              : Colors.white,
-                                        )),
+                                        style: AppTextStyles.labelBold.copyWith(
+                                            color: selected
+                                                ? Colors.amber
+                                                : AppColors.textPrimary)),
                                     const SizedBox(height: 2),
                                     Text(card.description,
-                                        style: const TextStyle(
-                                            color: Colors.white54,
-                                            fontSize: 12)),
+                                        style: AppTextStyles.bodySmall),
                                     const SizedBox(height: 6),
                                     Text(card.bonusSummary,
-                                        style: const TextStyle(
-                                            color: Color(0xFF8BC8FF),
-                                            fontSize: 12,
+                                        style: AppTextStyles.caption.copyWith(
+                                            color: AppColors.water,
                                             fontWeight: FontWeight.w600)),
                                   ],
                                 ),
@@ -121,15 +113,15 @@ class _MemoryCardScreenState extends State<MemoryCardScreen> {
                       borderRadius: BorderRadius.circular(12)),
                   disabledBackgroundColor: Colors.white12,
                 ),
-                child: const Text('이 기억을 간직할게',
-                    style:
-                        TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                child: Text('이 기억을 간직할게',
+                    style: AppTextStyles.labelBold.copyWith(color: Colors.black)),
               ),
               const SizedBox(height: 10),
               TextButton(
                 onPressed: () => Navigator.pop(context, null),
-                child: const Text('그냥 넘어갈게',
-                    style: TextStyle(color: Colors.white38, fontSize: 13)),
+                child: Text('그냥 넘어갈게',
+                    style: AppTextStyles.caption.copyWith(
+                        color: AppColors.textDisabled)),
               ),
             ],
           ),

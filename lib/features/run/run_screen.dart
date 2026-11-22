@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/theme/app_theme.dart';
 import '../../core/models/character.dart';
 import '../../core/models/memory_card.dart';
 import '../battle/battle_screen.dart';
@@ -43,7 +44,7 @@ class _RunScreenState extends ConsumerState<RunScreen> {
 
     if (runState == null || character == null) {
       return const Scaffold(
-        backgroundColor: Color(0xFF050D14),
+        backgroundColor: AppColors.bgDeep,
         body: Center(child: CircularProgressIndicator()),
       );
     }
@@ -72,16 +73,16 @@ class _RunScreenState extends ConsumerState<RunScreen> {
     final progressRatio = done / total;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF050D14),
+      backgroundColor: AppColors.bgDeep,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: const Text('낮잠 런', style: TextStyle(fontSize: 16)),
+        title: Text('낮잠 런', style: AppTextStyles.titleMedium),
         centerTitle: true,
         actions: [
           TextButton(
             onPressed: () => _confirmExit(context),
-            child: const Text('나가기', style: TextStyle(color: Colors.white54)),
+            child: Text('나가기', style: AppTextStyles.bodySmall),
           ),
         ],
       ),
@@ -142,7 +143,7 @@ class _RunScreenState extends ConsumerState<RunScreen> {
                 ),
                 child: Text(
                   runState.isBossPhase ? '👹 보스 도전!' : '⚔️ 전투 시작',
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  style: AppTextStyles.titleMedium,
                 ),
               ),
             ],
@@ -224,10 +225,10 @@ class _RunScreenState extends ConsumerState<RunScreen> {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        backgroundColor: const Color(0xFF1A0A2E),
-        title: const Text('런 포기', style: TextStyle(color: Colors.white)),
-        content: const Text('지금 나가면 이번 런의 기억이 사라져요.',
-            style: TextStyle(color: Colors.white70)),
+        backgroundColor: AppColors.bgPurple,
+        title: Text('런 포기', style: AppTextStyles.titleMedium),
+        content: Text('지금 나가면 이번 런의 기억이 사라져요.',
+            style: AppTextStyles.bodySmall),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -267,14 +268,11 @@ class _ProgressBar extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text('전투 $done / ${total - 1}',
-                style: const TextStyle(color: Colors.white70, fontSize: 13)),
+            Text('전투 $done / ${total - 1}', style: AppTextStyles.bodySmall),
             if (isBossNext)
-              const Text('🔥 보스',
-                  style: TextStyle(
-                      color: Colors.red,
-                      fontSize: 13,
-                      fontWeight: FontWeight.bold)),
+              Text('🔥 보스',
+                  style: AppTextStyles.bodySmall.copyWith(
+                      color: AppColors.hpLow, fontWeight: FontWeight.bold)),
           ],
         ),
         const SizedBox(height: 6),
@@ -283,7 +281,7 @@ class _ProgressBar extends StatelessWidget {
           child: LinearProgressIndicator(
             value: ratio,
             backgroundColor: Colors.white12,
-            color: isBossNext ? Colors.red : const Color(0xFF8B2FC9),
+            color: isBossNext ? AppColors.hpLow : AppColors.dungeon,
             minHeight: 8,
           ),
         ),
@@ -301,7 +299,7 @@ class _ZoneCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = isBoss ? Colors.red : const Color(0xFF8B2FC9);
+    final color = isBoss ? AppColors.hpLow : AppColors.dungeon;
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -321,13 +319,8 @@ class _ZoneCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(zone.name,
-                        style: TextStyle(
-                            color: color,
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold)),
-                    Text(zone.subtitle,
-                        style: const TextStyle(
-                            color: Colors.white60, fontSize: 12)),
+                        style: AppTextStyles.titleLarge.copyWith(color: color)),
+                    Text(zone.subtitle, style: AppTextStyles.bodySmall),
                   ],
                 ),
               ),
@@ -359,11 +352,10 @@ class _ZoneCard extends StatelessWidget {
                     child: Center(
                       child: Text(
                         cleared ? '✓' : '${i + 1}',
-                        style: TextStyle(
+                        style: AppTextStyles.caption.copyWith(
                           color: cleared
-                              ? Colors.green
-                              : (current ? color : Colors.white54),
-                          fontSize: 13,
+                              ? AppColors.hpHigh
+                              : (current ? color : AppColors.textMuted),
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -404,20 +396,16 @@ class _CardBuffsRow extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Text('📖 오늘의 기억',
-                  style: TextStyle(
-                      color: Colors.amber,
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold)),
+              Text('📖 오늘의 기억',
+                  style: AppTextStyles.caption.copyWith(
+                      color: Colors.amber, fontWeight: FontWeight.bold)),
               const Spacer(),
               if (attackBonus > 0)
                 Text('공격 +$attackBonus  ',
-                    style: const TextStyle(
-                        color: Color(0xFFE07840), fontSize: 12)),
+                    style: AppTextStyles.caption.copyWith(color: AppColors.fire)),
               if (defenseBonus > 0)
                 Text('방어 +$defenseBonus',
-                    style:
-                        const TextStyle(color: Colors.lightBlue, fontSize: 12)),
+                    style: AppTextStyles.caption.copyWith(color: AppColors.water)),
             ],
           ),
           const SizedBox(height: 6),
@@ -426,8 +414,7 @@ class _CardBuffsRow extends StatelessWidget {
             runSpacing: 4,
             children: cards
                 .map((c) => Text('${c.icon} ${c.name}',
-                    style: const TextStyle(
-                        color: Colors.white60, fontSize: 11)))
+                    style: AppTextStyles.caption))
                 .toList(),
           ),
         ],
@@ -465,8 +452,7 @@ class _CharHpRow extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 8),
-        Text('$hp / $maxHp',
-            style: const TextStyle(color: Colors.white70, fontSize: 12)),
+        Text('$hp / $maxHp', style: AppTextStyles.caption),
       ],
     );
   }
@@ -488,7 +474,7 @@ class _RunEndScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF050D14),
+      backgroundColor: AppColors.bgDeep,
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(32),
@@ -502,11 +488,8 @@ class _RunEndScreen extends StatelessWidget {
                 won
                     ? '아기가 평화롭게 깨어났습니다'
                     : '아기가 울며 깨어났습니다',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: won ? Colors.amber : Colors.red,
-                ),
+                style: AppTextStyles.titleLarge.copyWith(
+                    color: won ? Colors.amber : AppColors.hpLow),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 8),
@@ -514,7 +497,7 @@ class _RunEndScreen extends StatelessWidget {
                 won
                     ? '오늘은 조금 용감했어요.'
                     : '오늘은 조금 무서웠나요...',
-                style: const TextStyle(color: Colors.white60, fontSize: 14),
+                style: AppTextStyles.bodyMedium,
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 32),
@@ -524,12 +507,11 @@ class _RunEndScreen extends StatelessWidget {
               ElevatedButton(
                 onPressed: onExit,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF4A90D9),
+                  backgroundColor: AppColors.water,
                   padding: const EdgeInsets.symmetric(
                       horizontal: 40, vertical: 14),
                 ),
-                child: const Text('로비로 돌아가기',
-                    style: TextStyle(fontSize: 16)),
+                child: Text('로비로 돌아가기', style: AppTextStyles.labelBold),
               ),
             ],
           ),
@@ -551,13 +533,10 @@ class _StatRow extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text('$label: ',
-              style: const TextStyle(color: Colors.white70, fontSize: 14)),
+          Text('$label: ', style: AppTextStyles.bodyMedium),
           Text(value,
-              style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold)),
+              style: AppTextStyles.bodyMedium.copyWith(
+                  color: AppColors.textPrimary, fontWeight: FontWeight.bold)),
         ],
       ),
     );
