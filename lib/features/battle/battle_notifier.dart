@@ -225,22 +225,15 @@ class BattleNotifier extends StateNotifier<BattleState?> {
     if (state != null) _executeEnemyTurn(state!);
   }
 
-  // Intention biases the enemy's RPS choice so the telegraph is meaningful.
-  // 75% follow-through keeps it strategic but not perfectly predictable.
+  // The telegraph is always accurate — unpredictability comes from EnemyIntention.confused.
+  // Keeping a hidden 25% deviation made the hint feel like a lie; this removes that.
   RpsChoice _weightedEnemyChoice(EnemyIntention intention) {
-    final rand = Random().nextDouble();
     switch (intention) {
       case EnemyIntention.attack:
-        if (rand < 0.75) return RpsChoice.attack;
-        if (rand < 0.90) return RpsChoice.defense;
-        return RpsChoice.evasion;
+        return RpsChoice.attack;
       case EnemyIntention.defend:
-        if (rand < 0.15) return RpsChoice.attack;
-        if (rand < 0.90) return RpsChoice.defense;
-        return RpsChoice.evasion;
+        return RpsChoice.defense;
       case EnemyIntention.special:
-        if (rand < 0.20) return RpsChoice.attack;
-        if (rand < 0.50) return RpsChoice.defense;
         return RpsChoice.evasion;
       case EnemyIntention.confused:
         return RpsChoice.values[Random().nextInt(RpsChoice.values.length)];

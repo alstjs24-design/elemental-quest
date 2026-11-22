@@ -16,7 +16,7 @@ extension EnemyIntentionX on EnemyIntention {
   String get counterHint => switch (this) {
     EnemyIntention.attack   => '→ 피하기로 막아!',
     EnemyIntention.defend   => '→ 응시하기로 꿰뚫어!',
-    EnemyIntention.special  => '→ 집중 or 피해!',
+    EnemyIntention.special  => '→ 잡기로 돌파해!',
     EnemyIntention.confused => '',
   };
 }
