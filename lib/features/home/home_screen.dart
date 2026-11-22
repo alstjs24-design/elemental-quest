@@ -3,6 +3,7 @@
 // Reads: characterProvider (activeCharacter.name, level)
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/theme/app_theme.dart';
 import '../character/character_notifier.dart';
 import '../character/character_screen.dart';
 import '../dungeon/dungeon_screen.dart';
@@ -47,25 +48,34 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           child: Column(
             children: [
               const SizedBox(height: 40),
-              const Text(
-                '⚔️ Elemental Quest',
-                style: TextStyle(
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFFE07840),
-                  letterSpacing: 2,
+                      Text(
+                '아기의 꿈',
+                style: AppTextStyles.displayLarge.copyWith(
+                  color: AppColors.soul,
+                  letterSpacing: 4,
+                  shadows: [
+                    Shadow(color: AppColors.dungeon.withValues(alpha: 0.6), blurRadius: 24),
+                  ],
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 4),
+              Text(
+                '내면 세계로의 여정',
+                style: AppTextStyles.bodySmall.copyWith(letterSpacing: 2),
+              ),
+              const SizedBox(height: 10),
               if (character != null)
                 Text(
                   '${character.name}  Lv.${character.level}',
-                  style: const TextStyle(color: Colors.white60, fontSize: 14),
+                  style: AppTextStyles.bodyMedium,
                 ),
               if (legacy.soulFragments > 0)
-                Text(
-                  '💎 ${legacy.soulFragments} 영혼 파편',
-                  style: const TextStyle(color: Color(0xFFCE93D8), fontSize: 12),
+                Padding(
+                  padding: const EdgeInsets.only(top: 4),
+                  child: Text(
+                    '💎 ${legacy.soulFragments} 영혼 파편',
+                    style: AppTextStyles.bodySmall.copyWith(color: AppColors.soul),
+                  ),
                 ),
               const Spacer(),
               _MenuButton(
@@ -123,9 +133,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ),
               ),
               const Spacer(),
-              const Padding(
-                padding: EdgeInsets.only(bottom: 24),
-                child: Text('v0.1.0', style: TextStyle(color: Colors.white24, fontSize: 12)),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 24),
+                child: Text('v0.1.0', style: AppTextStyles.caption),
               ),
             ],
           ),
@@ -175,13 +185,9 @@ class _MenuButton extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(label,
-                          style: TextStyle(
-                              color: color,
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold)),
-                      Text(subtitle,
-                          style: const TextStyle(
-                              color: Colors.white70, fontSize: 12)),
+                          style: AppTextStyles.titleMedium.copyWith(color: color)),
+                      const SizedBox(height: 2),
+                      Text(subtitle, style: AppTextStyles.bodySmall),
                     ],
                   ),
                 ),

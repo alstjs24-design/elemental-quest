@@ -3,6 +3,7 @@
 // Reads/Writes: battleProvider (BattleState; calls playerChooseRps/playerFlee/endBattle)
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/theme/app_theme.dart';
 import '../../core/enums/character_trait.dart';
 import '../../core/enums/enemy_intention.dart';
 import '../../core/models/character.dart';
@@ -54,13 +55,13 @@ class _BattleScreenState extends ConsumerState<BattleScreen> {
 
     if (battle == null) {
       return const Scaffold(
-        backgroundColor: Color(0xFF050D14),
+        backgroundColor: AppColors.bgDeep,
         body: Center(child: CircularProgressIndicator()),
       );
     }
 
     return Scaffold(
-      backgroundColor: const Color(0xFF050D14),
+      backgroundColor: AppColors.bgDeep,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -70,22 +71,19 @@ class _BattleScreenState extends ConsumerState<BattleScreen> {
             Text(elemIcon(battle.enemy.element),
                 style: const TextStyle(fontSize: 18)),
             const SizedBox(width: 6),
-            Text(battle.enemy.name,
-                style: const TextStyle(
-                    fontSize: 16, fontWeight: FontWeight.bold)),
+            Text(battle.enemy.name, style: AppTextStyles.labelBold),
             if (battle.enemy.grade == EnemyGrade.boss) ...[
               const SizedBox(width: 6),
               Container(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
-                  color: Colors.red.shade900,
+                  color: AppColors.hpLow.withValues(alpha: 0.25),
                   borderRadius: BorderRadius.circular(4),
                 ),
-                child: const Text('BOSS',
-                    style: TextStyle(
-                        color: Colors.red,
-                        fontSize: 10,
+                child: Text('BOSS',
+                    style: AppTextStyles.caption.copyWith(
+                        color: AppColors.hpLow,
                         fontWeight: FontWeight.bold)),
               ),
             ],
@@ -135,7 +133,7 @@ class _BattleArena extends StatelessWidget {
                   end: Alignment.bottomCenter,
                   colors: [
                     enemyGlow.withValues(alpha: 0.08),
-                    const Color(0xFF050D14),
+                    AppColors.bgDeep,
                     playerGlow.withValues(alpha: 0.07),
                   ],
                 ),
@@ -202,8 +200,8 @@ class _BattleArena extends StatelessWidget {
                         children: [
                           Text(
                             'MP ${battle.player.currentMp}/${battle.player.stats.maxMp}',
-                            style: const TextStyle(
-                                color: Colors.purpleAccent, fontSize: 11),
+                            style: AppTextStyles.caption.copyWith(
+                                color: AppColors.soul),
                           ),
                           const SizedBox(width: 8),
                           Expanded(
@@ -214,7 +212,7 @@ class _BattleArena extends StatelessWidget {
                                         battle.player.stats.maxMp)
                                     .clamp(0.0, 1.0),
                                 backgroundColor: Colors.white12,
-                                color: Colors.purpleAccent,
+                                color: AppColors.soul,
                                 minHeight: 5,
                               ),
                             ),
@@ -245,9 +243,9 @@ class _BattleArena extends StatelessWidget {
                     border: Border.all(
                         color: Colors.red.withValues(alpha: 0.4)),
                   ),
-                  child: const Text('적 행동 중',
-                      style:
-                          TextStyle(color: Colors.red, fontSize: 11)),
+                  child: Text('적 행동 중',
+                      style: AppTextStyles.caption.copyWith(
+                          color: AppColors.hpLow)),
                 ),
               ),
             ),
@@ -278,14 +276,13 @@ class _IntentionStrip extends StatelessWidget {
       color: color.withValues(alpha: 0.08),
       child: Row(
         children: [
-          Text('$icon ', style: const TextStyle(fontSize: 13)),
+          Text('$icon ', style: AppTextStyles.bodySmall),
           Text('적 다음 행동: $label',
-              style: TextStyle(
-                  color: color, fontSize: 12, fontWeight: FontWeight.bold)),
+              style: AppTextStyles.bodySmall.copyWith(
+                  color: color, fontWeight: FontWeight.bold)),
           if (hint.isNotEmpty) ...[
             const SizedBox(width: 6),
-            Text(hint,
-                style: const TextStyle(color: Colors.white54, fontSize: 11)),
+            Text(hint, style: AppTextStyles.caption),
           ],
         ],
       ),
@@ -304,8 +301,17 @@ class _CompactBar extends StatelessWidget {
       required this.max,
       required this.color});
 
+  Color _hpColor(double ratio) {
+    if (ratio > 0.5) return AppColors.hpHigh;
+    if (ratio > 0.25) return AppColors.hpMid;
+    return AppColors.hpLow;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final ratio = (current / max).clamp(0.0, 1.0);
+    final hpColor = _hpColor(ratio);
+    final barColor = color == Colors.white ? hpColor : color;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -314,21 +320,21 @@ class _CompactBar extends StatelessWidget {
           children: [
             Expanded(
               child: Text(label,
-                  style: const TextStyle(
-                      color: Colors.white70, fontSize: 11),
+                  style: AppTextStyles.caption.copyWith(
+                      color: AppColors.textSecondary),
                   overflow: TextOverflow.ellipsis),
             ),
             Text('$current / $max',
-                style: TextStyle(color: color, fontSize: 11)),
+                style: AppTextStyles.caption.copyWith(color: hpColor)),
           ],
         ),
         const SizedBox(height: 3),
         ClipRRect(
           borderRadius: BorderRadius.circular(3),
           child: LinearProgressIndicator(
-            value: (current / max).clamp(0.0, 1.0),
+            value: ratio,
             backgroundColor: Colors.white12,
-            color: color,
+            color: barColor,
             minHeight: 7,
           ),
         ),
@@ -373,7 +379,7 @@ class _BattleLogState extends State<_BattleLog> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: Colors.black26,
+      color: const Color(0x1A000000),
       child: ListView.builder(
         controller: _scroll,
         padding:
@@ -385,9 +391,10 @@ class _BattleLogState extends State<_BattleLog> {
             padding: const EdgeInsets.symmetric(vertical: 2),
             child: Text(
               widget.log[i],
-              style: TextStyle(
-                  color: isLast ? Colors.white : Colors.white60,
-                  fontSize: 13,
+              style: AppTextStyles.battleLog.copyWith(
+                  color: isLast
+                      ? AppColors.textPrimary
+                      : AppColors.textMuted,
                   fontWeight: isLast
                       ? FontWeight.w500
                       : FontWeight.normal),
@@ -547,9 +554,7 @@ class _ABtn extends StatelessWidget {
         shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10)),
       ),
-      child: Text(label,
-          style: const TextStyle(
-              fontSize: 15, fontWeight: FontWeight.bold)),
+      child: Text(label, style: AppTextStyles.labelBold),
     );
   }
 }
@@ -572,17 +577,15 @@ class _ResultPanel extends ConsumerWidget {
         children: [
           Text(
             won ? '🏆 승리!' : (fled ? '🏃 도망 성공!' : '💀 패배...'),
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: won || fled ? Colors.amber : Colors.red,
+            style: AppTextStyles.titleLarge.copyWith(
+              color: won || fled ? Colors.amber : AppColors.hpLow,
             ),
           ),
           if (won) ...[
             const SizedBox(height: 8),
             Text(
               '경험치 +${battle.expReward}  골드 +${battle.goldReward}',
-              style: const TextStyle(color: Colors.white70),
+              style: AppTextStyles.bodySmall,
             ),
             if (battle.pendingDrops.isNotEmpty) ...[
               const SizedBox(height: 6),
@@ -591,8 +594,8 @@ class _ResultPanel extends ConsumerWidget {
                 spacing: 6,
                 children: battle.pendingDrops
                     .map((m) => Text('${m.icon} ${m.name}',
-                        style: const TextStyle(
-                            color: Colors.amber, fontSize: 12)))
+                        style: AppTextStyles.bodySmall.copyWith(
+                            color: Colors.amber)))
                     .toList(),
               ),
             ],

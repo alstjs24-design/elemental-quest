@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'core/theme/app_theme.dart';
 import 'features/character/character_save.dart';
 import 'features/crafting/material_save.dart';
 import 'features/legacy/legacy_save.dart';
@@ -43,13 +44,7 @@ class ElementalQuestApp extends StatelessWidget {
     return MaterialApp(
       title: 'Elemental Quest',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData.dark().copyWith(
-        colorScheme: const ColorScheme.dark(
-          primary: Color(0xFFE07840),
-          secondary: Color(0xFF4A90D9),
-        ),
-        splashFactory: InkRipple.splashFactory,
-      ),
+      theme: buildAppTheme(),
       home: const HomeScreen(),
     );
   }
