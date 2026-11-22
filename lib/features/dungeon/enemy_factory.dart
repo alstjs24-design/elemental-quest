@@ -84,6 +84,85 @@ class EnemyFactory {
     }
   }
 
+  // ── Run mode (낮잠 런 / 꿈 세계관) spawn ──────────────────────────────────
+  static List<Enemy> spawnForRunRoom({
+    required int floor,
+    required ElementType element,
+    required bool isBoss,
+  }) {
+    if (isBoss) {
+      return [_createRunBoss(floor: floor, element: element)];
+    }
+    return [_createRunNormal(floor: floor, element: element)];
+  }
+
+  static Enemy _createRunNormal({required int floor, required ElementType element}) {
+    final scale = 1.0 + (floor - 1) * 0.15;
+    final names = _runNamesFor(element);
+    final name = names[(floor + element.index) % names.length];
+    final id = 'run_${element.name}_f${floor}_${DateTime.now().millisecondsSinceEpoch}';
+    return Enemy(
+      id: id,
+      name: name,
+      element: element,
+      grade: EnemyGrade.normal,
+      maxHp: (80 * scale).round(),
+      attack: (20 * scale).round(),
+      defense: (10 * scale).round(),
+      speed: (15 * scale).round(),
+      skills: [],
+      expReward: (20 * scale).round(),
+      goldReward: 10 * scale,
+      tendency: _tendencyFor(element),
+    );
+  }
+
+  static Enemy _createRunBoss({required int floor, required ElementType element}) {
+    final scale = 1.0 + (floor - 1) * 0.2;
+    final id = 'run_boss_f${floor}_${DateTime.now().millisecondsSinceEpoch}';
+    final bossSkill = Skill(
+      id: 'run_boss_skill',
+      name: '분리의 절규',
+      description: '꿈속 깊은 두려움이 폭발한다',
+      element: element,
+      type: SkillType.attack,
+      basePower: (50 * scale).round(),
+      mpCost: 0,
+      cooldown: 3,
+    );
+    return Enemy(
+      id: id,
+      name: '분리불안의 화신',
+      element: element,
+      grade: EnemyGrade.boss,
+      maxHp: (300 * scale).round(),
+      attack: (40 * scale).round(),
+      defense: (20 * scale).round(),
+      speed: (12 * scale).round(),
+      skills: [bossSkill],
+      expReward: (100 * scale).round(),
+      goldReward: 50 * scale,
+      tendency: BattleTendency.unpredictable,
+    );
+  }
+
+  // 꿈 세계관: 아기의 감각/감정 의인화
+  static List<String> _runNamesFor(ElementType element) {
+    switch (element) {
+      case ElementType.fire:
+        return ['갑작스런 빛', '낯선 소리', '따가운 감각', '뜨거운 무언가'];
+      case ElementType.water:
+        return ['미끄러운 느낌', '흘러내리는 감각', '떠가는 무언가', '차가운 기억'];
+      case ElementType.earth:
+        return ['무거운 무언가', '짓누르는 감각', '굳어버린 두려움', '단단한 고집'];
+      case ElementType.wind:
+        return ['속삭이는 불안', '사라질 것 같은 느낌', '바람 같은 슬픔', '흔들리는 기억'];
+      case ElementType.none:
+        return ['알 수 없는 무언가', '형체 없는 느낌'];
+    }
+  }
+
+  // ── Dungeon mode names (기존) ────────────────────────────────────────────────
   static List<String> _namesFor(ElementType element) {
     switch (element) {
       case ElementType.fire:

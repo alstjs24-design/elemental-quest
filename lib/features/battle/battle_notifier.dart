@@ -1,9 +1,10 @@
 import 'dart:math';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/enums/character_trait.dart';
+import '../../core/enums/enemy_intention.dart';
 import '../../core/models/character.dart';
 import '../../core/models/enemy.dart';
-import '../../core/models/skill.dart';
 import '../../features/crafting/material_notifier.dart';
 import 'battle_engine.dart';
 import 'battle_state.dart';
@@ -16,6 +17,7 @@ class BattleNotifier extends StateNotifier<BattleState?> {
     required Enemy enemy,
     int? effectiveAttack,
     int? effectiveDefense,
+    int? effectiveMaxHp,
   }) {
     state = BattleState(
       player: player,
@@ -25,56 +27,12 @@ class BattleNotifier extends StateNotifier<BattleState?> {
       turn: 1,
       effectiveAttack: effectiveAttack ?? player.stats.attack,
       effectiveDefense: effectiveDefense ?? player.stats.defense,
+      effectiveMaxHp: effectiveMaxHp ?? player.stats.maxHp,
+      enemyIntention: enemy.calculateIntention(1),
     );
   }
 
-  void playerAttack() {
-    final s = state;
-    if (s == null || !s.isPlayerTurn) return;
-
-    final result = BattleEngine.executePlayerAction(
-      player: s.player,
-      enemy: s.enemy,
-      action: BattleAction.basicAttack,
-    );
-
-    _afterPlayerAction(s, result);
-  }
-
-  void playerUseSkill(Skill skill) {
-    final s = state;
-    if (s == null || !s.isPlayerTurn) return;
-
-    final result = BattleEngine.executePlayerAction(
-      player: s.player,
-      enemy: s.enemy,
-      action: BattleAction.useSkill(skill),
-    );
-
-    _afterPlayerAction(s, result);
-  }
-
-  void playerDefend() {
-    final s = state;
-    if (s == null || !s.isPlayerTurn) return;
-
-    final result = BattleEngine.executePlayerAction(
-      player: s.player,
-      enemy: s.enemy,
-      action: BattleAction.defend,
-    );
-
-    final newLog = [...s.log, result];
-    state = s.copyWith(
-      log: newLog,
-      isDefending: true,
-      phase: BattlePhase.enemyTurn,
-    );
-
-    _executeEnemyTurn(state!);
-  }
-
-  void playerFlee() {
+  Future<void> playerFlee() async {
     final s = state;
     if (s == null || !s.isPlayerTurn) return;
 
@@ -92,51 +50,74 @@ class BattleNotifier extends StateNotifier<BattleState?> {
     if (fled) {
       state = s.copyWith(log: [...s.log, result], phase: BattlePhase.fled);
     } else {
-      final newLog = [...s.log, result];
-      state = s.copyWith(log: newLog, phase: BattlePhase.enemyTurn);
-      _executeEnemyTurn(state!);
+      state = s.copyWith(log: [...s.log, result], phase: BattlePhase.enemyTurn);
+      await Future.delayed(const Duration(milliseconds: 400));
+      if (state != null) _executeEnemyTurn(state!);
     }
-  }
-
-  void _afterPlayerAction(BattleState s, BattleResult result) {
-    final newLog = [...s.log, result];
-
-    if (!s.enemy.isAlive) {
-      final drops = generateEnemyDrops(s.enemy);
-      state = s.copyWith(log: newLog, phase: BattlePhase.victory, pendingDrops: drops);
-      return;
-    }
-
-    state = s.copyWith(log: newLog, phase: BattlePhase.enemyTurn);
-    _executeEnemyTurn(state!);
   }
 
   void _executeEnemyTurn(BattleState s) {
-    final defenseReduction = s.isDefending ? 0.5 : 1.0;
+    // shrinker passive: invincible this turn
+    if (s.isInvincible) {
+      final blockEntry = BattleResult(
+        actorName: s.player.name,
+        targetName: s.player.name,
+        message: '🫣 무적! 적의 공격을 완전히 무시!',
+      );
+      state = s.copyWith(
+        log: [...s.log, blockEntry],
+        phase: BattlePhase.playerTurn,
+        isInvincible: false,
+        turn: s.turn + 1,
+      );
+      return;
+    }
+
     final result = BattleEngine.executeEnemyAction(
       enemy: s.enemy,
       player: s.player,
       effectiveDefense: s.effectiveDefense,
     );
 
-    final actualDamage = (result.damage * defenseReduction).round();
-    if (actualDamage != result.damage && result.damage > 0) {
-      s.player.currentHp = (s.player.currentHp + result.damage - actualDamage)
-          .clamp(0, s.player.stats.maxHp);
+    final actualDamage = result.damage;
+
+    // Gazer balance: being hit while charging cancels the charge
+    var newIsCharged = s.isCharged;
+    var newLog = [...s.log, result];
+    if (s.player.trait == CharacterTrait.gazer && s.isCharged && actualDamage > 0) {
+      newIsCharged = false;
+      newLog = [...newLog, BattleResult(
+        actorName: s.enemy.name,
+        targetName: s.player.name,
+        message: '⚡ 집중이 풀렸다! (피격으로 취소)',
+      )];
     }
 
-    final newLog = [...s.log, result];
+    // accepter: accumulate damage from enemy turn
+    var newAbsorbedDamage = s.absorbedDamage;
+    if (s.player.trait == CharacterTrait.accepter && actualDamage > 0) {
+      newAbsorbedDamage += actualDamage;
+    }
+
+    final nextTurn = s.turn + 1;
+    final nextIntention = s.enemy.calculateIntention(nextTurn);
 
     if (!s.player.isAlive) {
-      state = s.copyWith(log: newLog, phase: BattlePhase.defeat, isDefending: false);
+      state = s.copyWith(
+        log: newLog, phase: BattlePhase.defeat,
+        isCharged: newIsCharged,
+        consecutiveWins: 0, absorbedDamage: 0,
+      );
       return;
     }
 
     state = s.copyWith(
       log: newLog,
       phase: BattlePhase.playerTurn,
-      isDefending: false,
-      turn: s.turn + 1,
+      isCharged: newIsCharged,
+      absorbedDamage: newAbsorbedDamage,
+      enemyIntention: nextIntention,
+      turn: nextTurn,
     );
   }
 
@@ -144,7 +125,7 @@ class BattleNotifier extends StateNotifier<BattleState?> {
     final s = state;
     if (s == null || !s.isPlayerTurn) return;
 
-    final enemyChoice = _weightedEnemyChoice(s.enemy.tendency);
+    final enemyChoice = _weightedEnemyChoice(s.enemyIntention);
     final result = BattleEngine.resolveRps(
       playerChoice: choice,
       enemyChoice: enemyChoice,
@@ -152,7 +133,10 @@ class BattleNotifier extends StateNotifier<BattleState?> {
       enemy: s.enemy,
       effectiveAttack: s.effectiveAttack,
       effectiveDefense: s.effectiveDefense,
+      effectiveMaxHp: s.effectiveMaxHp,
       isCharged: s.isCharged,
+      consecutiveWins: s.consecutiveWins,
+      absorbedDamage: s.absorbedDamage,
     );
 
     final entries = <BattleResult>[
@@ -172,61 +156,93 @@ class BattleNotifier extends StateNotifier<BattleState?> {
 
     final newLog = [...s.log, ...entries];
 
+    // Update passive states based on result
+    final trait = s.player.trait;
+    // screamer: 연승은 잡기 승리 시에만 증가, 패배 시 리셋, 다른 행동 승리 시 유지
+    final newConsecutiveWins = result.outcome == -1
+        ? 0
+        : (choice == RpsChoice.attack && result.outcome == 1
+            ? s.consecutiveWins + 1
+            : s.consecutiveWins);
+    // accepter: 잡기 승리 시에만 흡수 데미지 소진(리셋), 나머지 상황엔 계속 누적
+    final newAbsorbedDamage = trait == CharacterTrait.accepter
+        ? (choice == RpsChoice.attack && result.outcome == 1
+            ? 0
+            : s.absorbedDamage + result.enemyDamageDealt)
+        : 0;
+    // shrinker: 피하기 승리 시 무적 (테마: 작아지기/숨기)
+    final newInvincible = trait == CharacterTrait.shrinker &&
+        result.outcome == 1 &&
+        choice == RpsChoice.defense;
+
     if (!s.enemy.isAlive) {
       final drops = generateEnemyDrops(s.enemy);
-      state = s.copyWith(log: newLog, phase: BattlePhase.victory, pendingDrops: drops, isCharged: false);
+      state = s.copyWith(
+        log: newLog, phase: BattlePhase.victory, pendingDrops: drops,
+        isCharged: false, consecutiveWins: 0, absorbedDamage: 0, isInvincible: false,
+      );
       return;
     }
     if (!s.player.isAlive) {
-      state = s.copyWith(log: newLog, phase: BattlePhase.defeat, isCharged: false);
+      state = s.copyWith(
+        log: newLog, phase: BattlePhase.defeat,
+        isCharged: false, consecutiveWins: 0, absorbedDamage: 0, isInvincible: false,
+      );
       return;
     }
 
+    final nextTurn = s.turn + 1;
     state = s.copyWith(
       log: newLog,
       phase: BattlePhase.playerTurn,
-      turn: s.turn + 1,
+      turn: nextTurn,
       isCharged: false,
+      consecutiveWins: newConsecutiveWins,
+      absorbedDamage: newAbsorbedDamage,
+      isInvincible: newInvincible,
+      enemyIntention: s.enemy.calculateIntention(nextTurn),
     );
   }
 
-  void playerCharge() {
+  Future<void> playerCharge() async {
     final s = state;
     if (s == null || !s.isPlayerTurn || s.isCharged) return;
 
+    final chargeMult = s.player.trait == CharacterTrait.gazer ? '×4.0' : '×2.0';
     final entry = BattleResult(
       actorName: s.player.name,
       targetName: s.player.name,
-      message: '⚡ ${s.player.name}이(가) 집중! 다음 공격 ×2.0!',
+      message: '⚡ ${s.player.name}이(가) 집중! 다음 공격 $chargeMult!',
     );
 
+    // Show "enemy turn" briefly so the UI can render the charge state
     state = s.copyWith(
       log: [...s.log, entry],
       isCharged: true,
       phase: BattlePhase.enemyTurn,
     );
-    _executeEnemyTurn(state!);
+    await Future.delayed(const Duration(milliseconds: 400));
+    if (state != null) _executeEnemyTurn(state!);
   }
 
-  RpsChoice _weightedEnemyChoice(BattleTendency tendency) {
+  // Intention biases the enemy's RPS choice so the telegraph is meaningful.
+  // 75% follow-through keeps it strategic but not perfectly predictable.
+  RpsChoice _weightedEnemyChoice(EnemyIntention intention) {
     final rand = Random().nextDouble();
-    switch (tendency) {
-      case BattleTendency.aggressive:
-        // 60% attack, 20% defense, 20% evasion
-        if (rand < 0.60) return RpsChoice.attack;
-        if (rand < 0.80) return RpsChoice.defense;
+    switch (intention) {
+      case EnemyIntention.attack:
+        if (rand < 0.75) return RpsChoice.attack;
+        if (rand < 0.90) return RpsChoice.defense;
         return RpsChoice.evasion;
-      case BattleTendency.defensive:
-        // 20% attack, 60% defense, 20% evasion
+      case EnemyIntention.defend:
+        if (rand < 0.15) return RpsChoice.attack;
+        if (rand < 0.90) return RpsChoice.defense;
+        return RpsChoice.evasion;
+      case EnemyIntention.special:
         if (rand < 0.20) return RpsChoice.attack;
-        if (rand < 0.80) return RpsChoice.defense;
+        if (rand < 0.50) return RpsChoice.defense;
         return RpsChoice.evasion;
-      case BattleTendency.evasive:
-        // 20% attack, 20% defense, 60% evasion
-        if (rand < 0.20) return RpsChoice.attack;
-        if (rand < 0.40) return RpsChoice.defense;
-        return RpsChoice.evasion;
-      case BattleTendency.unpredictable:
+      case EnemyIntention.confused:
         return RpsChoice.values[Random().nextInt(RpsChoice.values.length)];
     }
   }

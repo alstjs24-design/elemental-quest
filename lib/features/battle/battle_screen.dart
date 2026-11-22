@@ -3,6 +3,8 @@
 // Reads/Writes: battleProvider (BattleState; calls playerChooseRps/playerFlee/endBattle)
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/enums/character_trait.dart';
+import '../../core/enums/enemy_intention.dart';
 import '../../core/models/character.dart';
 import '../../core/models/enemy.dart';
 import '../character/character_notifier.dart';
@@ -15,8 +17,16 @@ import 'battle_state.dart';
 class BattleScreen extends ConsumerStatefulWidget {
   final Character player;
   final Enemy enemy;
+  final int extraAttackBonus;
+  final int extraDefenseBonus;
 
-  const BattleScreen({super.key, required this.player, required this.enemy});
+  const BattleScreen({
+    super.key,
+    required this.player,
+    required this.enemy,
+    this.extraAttackBonus = 0,
+    this.extraDefenseBonus = 0,
+  });
 
   @override
   ConsumerState<BattleScreen> createState() => _BattleScreenState();
@@ -31,8 +41,9 @@ class _BattleScreenState extends ConsumerState<BattleScreen> {
       ref.read(battleProvider.notifier).startBattle(
             player: widget.player,
             enemy: widget.enemy,
-            effectiveAttack: effective.attack,
-            effectiveDefense: effective.defense,
+            effectiveAttack: effective.attack + widget.extraAttackBonus,
+            effectiveDefense: effective.defense + widget.extraDefenseBonus,
+            effectiveMaxHp: effective.maxHp,
           );
     });
   }
@@ -85,6 +96,7 @@ class _BattleScreenState extends ConsumerState<BattleScreen> {
       body: Column(
         children: [
           _BattleArena(battle: battle),
+          _IntentionStrip(battle: battle),
           Expanded(
             child: _BattleLog(
                 log: battle.log.map((r) => r.message).toList()),
@@ -108,7 +120,7 @@ class _BattleArena extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final enemyGlow = elemAccentColor(battle.enemy.element);
-    final playerGlow = elemAccentColor(battle.player.element);
+    final playerGlow = traitAccentColor(battle.player.trait);
 
     return SizedBox(
       height: 268,
@@ -182,7 +194,7 @@ class _BattleArena extends StatelessWidget {
                       _CompactBar(
                         label: battle.player.name,
                         current: battle.player.currentHp,
-                        max: battle.player.stats.maxHp,
+                        max: battle.effectiveMaxHp,
                         color: playerGlow,
                       ),
                       const SizedBox(height: 4),
@@ -239,6 +251,42 @@ class _BattleArena extends StatelessWidget {
                 ),
               ),
             ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Intention strip ───────────────────────────────────────────────────────────
+
+class _IntentionStrip extends StatelessWidget {
+  final BattleState battle;
+  const _IntentionStrip({required this.battle});
+
+  @override
+  Widget build(BuildContext context) {
+    if (battle.isBattleOver) return const SizedBox.shrink();
+    final intention = battle.enemyIntention;
+    final (color, icon, label, hint) = switch (intention) {
+      EnemyIntention.attack   => (Colors.deepOrange, '🤜', '잡기', '→ 피하기로 막아!'),
+      EnemyIntention.defend   => (Colors.blue,       '🛡️', '방어', '→ 응시하기로 꿰뚫어!'),
+      EnemyIntention.special  => (Colors.purple,     '💫', '특수 행동', '→ 집중 or 피해!'),
+      EnemyIntention.confused => (Colors.grey,       '❓', '알 수 없음', ''),
+    };
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
+      color: color.withValues(alpha: 0.08),
+      child: Row(
+        children: [
+          Text('$icon ', style: const TextStyle(fontSize: 13)),
+          Text('적 다음 행동: $label',
+              style: TextStyle(
+                  color: color, fontSize: 12, fontWeight: FontWeight.bold)),
+          if (hint.isNotEmpty) ...[
+            const SizedBox(width: 6),
+            Text(hint,
+                style: const TextStyle(color: Colors.white54, fontSize: 11)),
+          ],
         ],
       ),
     );
@@ -367,29 +415,42 @@ class _ActionBar extends ConsumerWidget {
       color: Colors.black38,
       child: Column(
         children: [
-          // charge indicator
-          if (battle.isCharged)
+          // Passive state indicators
+          if (battle.isCharged || battle.consecutiveWins > 0 || battle.absorbedDamage > 0 || battle.isInvincible)
             Padding(
               padding: const EdgeInsets.only(bottom: 8),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Colors.amber.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.amber.withValues(alpha: 0.6)),
-                ),
-                child: const Text(
-                  '⚡ 집중 충전 완료! 다음 공격 ×2.0',
-                  style: TextStyle(color: Colors.amber, fontSize: 12, fontWeight: FontWeight.bold),
-                  textAlign: TextAlign.center,
-                ),
+              child: Wrap(
+                alignment: WrapAlignment.center,
+                spacing: 6,
+                children: [
+                  if (battle.isCharged)
+                    _StatusChip(
+                      text: '⚡ 집중! ×${battle.player.trait == CharacterTrait.gazer ? '4.0' : '2.0'}',
+                      color: Colors.amber,
+                    ),
+                  if (battle.consecutiveWins > 0)
+                    _StatusChip(
+                      text: '😤 ${battle.consecutiveWins}연승',
+                      color: Colors.deepOrange,
+                    ),
+                  if (battle.absorbedDamage > 0)
+                    _StatusChip(
+                      text: '🤗 흡수 +${battle.absorbedDamage}',
+                      color: Colors.lightBlue,
+                    ),
+                  if (battle.isInvincible)
+                    _StatusChip(
+                      text: '🫣 무적!',
+                      color: Colors.green,
+                    ),
+                ],
               ),
             ),
           Row(
             children: [
               Expanded(
                 child: _ABtn(
-                  label: battle.isCharged ? '⚡⚔️ 강타' : '⚔️ 강타',
+                  label: battle.isCharged ? '⚡🤜 잡기' : '🤜 잡기',
                   enabled: enabled,
                   color: battle.isCharged ? Colors.deepOrange : const Color(0xFFE07840),
                   onTap: () => notifier.playerChooseRps(RpsChoice.attack),
@@ -398,7 +459,7 @@ class _ActionBar extends ConsumerWidget {
               const SizedBox(width: 8),
               Expanded(
                 child: _ABtn(
-                  label: battle.isCharged ? '⚡🛡️ 막아치기' : '🛡️ 막아치기',
+                  label: battle.isCharged ? '⚡🫂 피하기' : '🫂 피하기',
                   enabled: enabled,
                   color: battle.isCharged ? Colors.indigo : Colors.blueGrey,
                   onTap: () => notifier.playerChooseRps(RpsChoice.defense),
@@ -407,7 +468,7 @@ class _ActionBar extends ConsumerWidget {
               const SizedBox(width: 8),
               Expanded(
                 child: _ABtn(
-                  label: battle.isCharged ? '⚡💨 꿰뚫기' : '💨 꿰뚫기',
+                  label: battle.isCharged ? '⚡👀 응시하기' : '👀 응시하기',
                   enabled: enabled,
                   color: battle.isCharged ? Colors.cyan.shade700 : Colors.teal,
                   onTap: () => notifier.playerChooseRps(RpsChoice.evasion),
@@ -423,7 +484,7 @@ class _ActionBar extends ConsumerWidget {
                   label: battle.isCharged ? '⚡ 충전 완료' : '⚡ 집중',
                   enabled: enabled && !battle.isCharged,
                   color: Colors.amber.shade700,
-                  onTap: notifier.playerCharge,
+                  onTap: () => notifier.playerCharge(),
                 ),
               ),
               const SizedBox(width: 8),
@@ -432,13 +493,33 @@ class _ActionBar extends ConsumerWidget {
                   label: '🏃 도망',
                   enabled: enabled,
                   color: Colors.orange,
-                  onTap: notifier.playerFlee,
+                  onTap: () => notifier.playerFlee(),
                 ),
               ),
             ],
           ),
         ],
       ),
+    );
+  }
+}
+
+class _StatusChip extends StatelessWidget {
+  final String text;
+  final Color color;
+  const _StatusChip({required this.text, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withValues(alpha: 0.6)),
+      ),
+      child: Text(text,
+          style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.bold)),
     );
   }
 }

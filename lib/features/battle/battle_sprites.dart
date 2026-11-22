@@ -1,6 +1,7 @@
 // Placeholder sprite widgets — swap emoji/gradient for real assets when art is ready.
 // EnemySprite and PlayerSprite both idle-bob continuously.
 import 'package:flutter/material.dart';
+import '../../core/enums/character_trait.dart';
 import '../../core/enums/element_type.dart';
 import '../../core/models/character.dart';
 import '../../core/models/enemy.dart';
@@ -85,7 +86,7 @@ class _PlayerSpriteState extends State<PlayerSprite>
 
   @override
   Widget build(BuildContext context) {
-    final theme = _playerTheme(widget.character.element);
+    final theme = _playerTheme(widget.character.trait);
     return AnimatedBuilder(
       animation: _bob,
       builder: (_, child) =>
@@ -184,22 +185,28 @@ _SpriteTheme _enemyTheme(ElementType element, EnemyGrade grade) {
   }
 }
 
-_SpriteTheme _playerTheme(ElementType element) {
-  switch (element) {
-    case ElementType.fire:
-      return _SpriteTheme('🧙', [const Color(0xFF2A0A00), const Color(0xFF5C1500)], const Color(0xFFE07840));
-    case ElementType.water:
-      return _SpriteTheme('🧜', [const Color(0xFF021020), const Color(0xFF082040)], const Color(0xFF42A5F5));
-    case ElementType.earth:
-      return _SpriteTheme('🧝', [const Color(0xFF081008), const Color(0xFF102010)], const Color(0xFF4CAF50));
-    case ElementType.wind:
-      return _SpriteTheme('🧚', [const Color(0xFF001015), const Color(0xFF002028)], const Color(0xFF00BCD4));
-    case ElementType.none:
-      return _SpriteTheme('⚔️', [const Color(0xFF10101E), const Color(0xFF1A1A30)], const Color(0xFF7E57C2));
+_SpriteTheme _playerTheme(CharacterTrait trait) {
+  switch (trait) {
+    case CharacterTrait.screamer:
+      return _SpriteTheme('😤', [const Color(0xFF2A0A00), const Color(0xFF5C1500)], const Color(0xFFE07840));
+    case CharacterTrait.accepter:
+      return _SpriteTheme('🤗', [const Color(0xFF021020), const Color(0xFF082040)], const Color(0xFF42A5F5));
+    case CharacterTrait.gazer:
+      return _SpriteTheme('👀', [const Color(0xFF001015), const Color(0xFF002028)], const Color(0xFF00BCD4));
+    case CharacterTrait.shrinker:
+      return _SpriteTheme('🫣', [const Color(0xFF081008), const Color(0xFF102010)], const Color(0xFF4CAF50));
   }
 }
 
-/// Accent color for an element — used for glow and HP bars.
+/// Accent color for a character trait — used for glow and HP bars.
+Color traitAccentColor(CharacterTrait trait) => switch (trait) {
+      CharacterTrait.screamer => const Color(0xFFE07840),
+      CharacterTrait.accepter => const Color(0xFF42A5F5),
+      CharacterTrait.gazer    => const Color(0xFF00BCD4),
+      CharacterTrait.shrinker => const Color(0xFF4CAF50),
+    };
+
+/// Accent color for an element — used for enemy glow and HP bars.
 Color elemAccentColor(ElementType element) => switch (element) {
       ElementType.fire  => const Color(0xFFE07840),
       ElementType.water => const Color(0xFF42A5F5),

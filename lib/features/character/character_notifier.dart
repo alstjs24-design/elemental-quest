@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../core/enums/element_type.dart';
+import '../../core/enums/character_trait.dart';
 import '../../core/models/character.dart';
 import '../../core/models/equipment.dart';
 import '../legacy/legacy_notifier.dart';
@@ -130,8 +130,8 @@ class CharacterNotifier extends StateNotifier<CharacterState> {
 
   Character _createStarterCharacter() => Character(
     id: 'hero_starter',
-    name: '불꽃 기사',
-    element: ElementType.fire,
+    name: '아기',
+    trait: CharacterTrait.screamer,
     rarity: Rarity.common,
     baseStats: const CharacterStats(
       maxHp: 200,

@@ -9,6 +9,7 @@ import '../dungeon/dungeon_screen.dart';
 import '../legacy/legacy_notifier.dart';
 import '../legacy/legacy_screen.dart';
 import '../pvp/pvp_screen.dart';
+import '../run/run_screen.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -67,6 +68,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   style: const TextStyle(color: Color(0xFFCE93D8), fontSize: 12),
                 ),
               const Spacer(),
+              _MenuButton(
+                icon: '😴',
+                label: '낮잠 런',
+                subtitle: '꿈속 여정 — 추억을 모아 강해져',
+                color: const Color(0xFF4DB6AC),
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const RunScreen()),
+                ),
+              ),
+              const SizedBox(height: 16),
               _MenuButton(
                 icon: '🗺️',
                 label: '던전 탐험',

@@ -1,4 +1,4 @@
-import '../enums/element_type.dart';
+import '../enums/character_trait.dart';
 import 'skill.dart';
 
 enum Rarity { common, rare, hero, legend }
@@ -30,7 +30,7 @@ class CharacterStats {
 class Character {
   final String id;
   final String name;
-  final ElementType element;
+  final CharacterTrait trait;
   final Rarity rarity;
   final CharacterStats baseStats;
   final List<Skill> skills;
@@ -43,7 +43,7 @@ class Character {
   Character({
     required this.id,
     required this.name,
-    required this.element,
+    required this.trait,
     required this.rarity,
     required this.baseStats,
     required this.skills,

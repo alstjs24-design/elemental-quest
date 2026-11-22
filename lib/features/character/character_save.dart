@@ -1,4 +1,5 @@
 import 'package:hive_flutter/hive_flutter.dart';
+import '../../core/enums/character_trait.dart';
 import '../../core/enums/element_type.dart';
 import '../../core/models/character.dart';
 import '../../core/models/equipment.dart';
@@ -49,7 +50,7 @@ class CharacterSave {
   static Map<String, dynamic> _serializeCharacter(Character c) => {
     'id': c.id,
     'name': c.name,
-    'element': c.element.index,
+    'trait': c.trait.index,
     'rarity': c.rarity.index,
     'level': c.level,
     'exp': c.exp,
@@ -73,7 +74,7 @@ class CharacterSave {
     final character = Character(
       id: d['id'] as String,
       name: d['name'] as String,
-      element: ElementType.values[d['element'] as int],
+      trait: CharacterTrait.values[(d['trait'] ?? 0) as int],
       rarity: Rarity.values[d['rarity'] as int],
       baseStats: stats,
       skills: [],

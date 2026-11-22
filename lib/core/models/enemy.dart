@@ -1,4 +1,5 @@
 import '../enums/element_type.dart';
+import '../enums/enemy_intention.dart';
 import 'skill.dart';
 
 enum EnemyGrade { normal, elite, boss }
@@ -37,4 +38,23 @@ class Enemy {
   }) : currentHp = maxHp;
 
   bool get isAlive => currentHp > 0;
+
+  // Returns the enemy's most likely next action — deterministic per turn so the
+  // player can learn the pattern. Boss low-HP overrides to special more often.
+  EnemyIntention calculateIntention(int turnNumber) {
+    final hpRatio = currentHp / maxHp;
+    if (grade == EnemyGrade.boss && hpRatio < 0.3 && skills.isNotEmpty) {
+      return turnNumber.isOdd ? EnemyIntention.special : EnemyIntention.attack;
+    }
+    switch (tendency) {
+      case BattleTendency.aggressive:
+        return (turnNumber % 3 == 0) ? EnemyIntention.defend : EnemyIntention.attack;
+      case BattleTendency.defensive:
+        return (turnNumber % 3 == 0) ? EnemyIntention.attack : EnemyIntention.defend;
+      case BattleTendency.evasive:
+        return turnNumber.isOdd ? EnemyIntention.special : EnemyIntention.attack;
+      case BattleTendency.unpredictable:
+        return EnemyIntention.confused;
+    }
+  }
 }

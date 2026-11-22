@@ -4,6 +4,7 @@
 // Writes: equipItem, unequipSlot on characterProvider.notifier
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/enums/character_trait.dart';
 import '../../core/models/character.dart';
 import '../../core/models/equipment.dart';
 import '../crafting/crafting_screen.dart';
@@ -126,9 +127,9 @@ class _StatCard extends StatelessWidget {
                       fontSize: 20,
                       fontWeight: FontWeight.bold)),
               const SizedBox(width: 8),
-              Text(character.element.name.toUpperCase(),
+              Text(character.trait.displayName,
                   style: const TextStyle(
-                      color: Colors.white70, fontSize: 13)),
+                      color: Colors.white70, fontSize: 12)),
             ],
           ),
           const SizedBox(height: 4),
@@ -138,9 +139,6 @@ class _StatCard extends StatelessWidget {
           const Divider(color: Colors.white12, height: 20),
           _StatRow('HP',
               '${character.currentHp} / ${stats.maxHp}', Colors.red),
-          _StatRow('MP',
-              '${character.currentMp} / ${stats.maxMp}',
-              Colors.purple),
           _StatRow(
               '공격', '${stats.attack}', const Color(0xFFE07840)),
           _StatRow('방어', '${stats.defense}', Colors.blue),
